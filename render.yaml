@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: green-ag-intelligence
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:server
+    envVars:
+      - key: PORT
+        value: 8050
+      - key: DASH_DEBUG
+        value: "0"
