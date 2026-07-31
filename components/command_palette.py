@@ -40,7 +40,7 @@ def create_command_palette() -> html.Div:
                         ],
                         className="position-relative",
                     ),
-                    html.Div(actions, className="ga-command-palette-list"),
+                    html.Div(actions, className="ga-command-palette-list", id="command-palette-list"),
                 ],
                 className="ga-command-palette",
             ),

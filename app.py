@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import dash
 import dash_bootstrap_components as dbc
-from dash import dcc, html
+from dash import dcc, html, Input, Output
 
 # =============================================================================
 # Configuration
@@ -36,6 +36,13 @@ from components.recommendations import create_recommendations
 from components.command_palette import create_command_palette
 from components.onboarding import create_onboarding
 from components.footer import create_footer
+from components.map_explorer import create_map_explorer_page
+from components.crop_health import create_crop_health_page
+from components.weather_page import create_weather_page
+from components.soil_terrain import create_soil_terrain_page
+from components.farm_management import create_farm_management_page
+from components.reports import create_reports_page
+from components.settings import create_settings_page
 
 # =============================================================================
 # Callbacks
@@ -157,35 +164,25 @@ def create_overview_page() -> html.Div:
 
 
 # =============================================================================
-# Placeholder Pages for Other Sections
+# Page Router
 # =============================================================================
 
-def create_placeholder_page(title: str, icon: str) -> html.Div:
-    """Create a placeholder page for sections under construction."""
-    return html.Div(
-        [
-            html.Div(
-                [
-                    html.Div(icon, className="ga-empty-icon"),
-                    html.H3(title, className="ga-empty-title"),
-                    html.P(
-                        "This section is coming soon. Check back for updates.",
-                        className="ga-empty-desc",
-                    ),
-                    html.Div(
-                        html.Button(
-                            "← Back to Overview",
-                            id="btn-back-overview",
-                            className="ga-filter-btn ga-filter-btn-primary",
-                        ),
-                        className="ga-empty-actions",
-                    ),
-                ],
-                className="ga-empty",
-                style={"minHeight": "60vh"},
-            ),
-        ],
-    )
+PAGE_CREATORS = {
+    "overview": create_overview_page,
+    "map-explorer": create_map_explorer_page,
+    "crop-health": create_crop_health_page,
+    "weather": create_weather_page,
+    "soil-terrain": create_soil_terrain_page,
+    "reports": create_reports_page,
+    "farm-mgmt": create_farm_management_page,
+    "settings": create_settings_page,
+}
+
+
+def create_page(section: str) -> html.Div:
+    """Create the page for the given section."""
+    creator = PAGE_CREATORS.get(section, create_overview_page)
+    return creator()
 
 
 # =============================================================================
@@ -261,6 +258,44 @@ register_interaction_callbacks(app)
 register_navigation_callbacks(app)
 register_theme_callbacks(app)
 register_export_callbacks(app)
+
+# =============================================================================
+# Clientside Callbacks
+# =============================================================================
+
+# Ctrl+K keyboard shortcut to open command palette
+app.clientside_callback(
+    """
+    function(id) {
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                var overlay = document.getElementById('command-palette-overlay');
+                if (overlay) {
+                    overlay.style.display = 'flex';
+                    setTimeout(function() {
+                        var input = document.getElementById('command-palette-input');
+                        if (input) {
+                            input.focus();
+                            input.value = '';
+                            input.dispatchEvent(new Event('input', { bubbles: true }));
+                        }
+                    }, 50);
+                }
+            }
+            if (e.key === 'Escape') {
+                var overlay = document.getElementById('command-palette-overlay');
+                if (overlay && overlay.style.display === 'flex') {
+                    overlay.style.display = 'none';
+                }
+            }
+        });
+        return window.dash_clientside.no_update;
+    }
+    """,
+    Output("ga-root", "data-keyboard"),
+    Input("ga-root", "id"),
+)
 
 # =============================================================================
 # Main Entry

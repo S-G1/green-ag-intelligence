@@ -56,5 +56,5 @@ def create_onboarding() -> html.Div:
         ],
         id="onboarding-overlay",
         className="ga-onboarding-overlay",
-        style={"display": "none"},
+        style={"display": "flex"},
     )

@@ -6,7 +6,7 @@ from dash import html, dcc
 
 
 def create_global_search() -> html.Div:
-    """Build the global search bar."""
+    """Build the global search bar with results dropdown."""
     return html.Div(
         [
             html.Div(
@@ -15,13 +15,21 @@ def create_global_search() -> html.Div:
                     dcc.Input(
                         type="text",
                         placeholder="Search farms, fields, reports, documentation…",
-                        id="global-search",
+                        id="global-search-input",
                         className="ga-search-input",
+                        autoComplete="off",
                     ),
                     html.Span("Ctrl K", className="ga-search-shortcut d-none d-md-inline"),
                 ],
+                id="global-search",
                 className="ga-search",
+                style={"cursor": "pointer"},
+            ),
+            html.Div(
+                id="search-results",
+                className="search-results-dropdown",
+                style={"display": "none"},
             ),
         ],
-        className="ga-search-container",
+        className="ga-search-container position-relative",
     )

@@ -138,3 +138,58 @@ def register_interaction_callbacks(app: dash.Dash) -> None:
                 return child.figure
         
         raise PreventUpdate
+    
+    # ─────────────────────────────────────────────────────────────────────────
+    # Global Search — filter fields and show dropdown
+    # ─────────────────────────────────────────────────────────────────────────
+    @app.callback(
+        Output("search-results", "children"),
+        Output("search-results", "style"),
+        Input("global-search-input", "value"),
+    )
+    def update_search_results(query):
+        """Show search results dropdown based on global search input."""
+        from data import FIELDS
+        
+        if not query or len(query) < 2:
+            return [], {"display": "none"}
+        
+        query_lower = query.lower()
+        matches = []
+        
+        for f in FIELDS:
+            match = (
+                query_lower in f["name"].lower()
+                or query_lower in f["crop_2025"].lower()
+                or query_lower in f["soil_type"].lower()
+            )
+            if match:
+                matches.append(
+                    html.Div(
+                        [
+                            html.Div(
+                                [
+                                    html.Span("📍", className="me-2"),
+                                    html.Span(f["name"], className="search-result-title"),
+                                ],
+                                className="d-flex align-items-center",
+                            ),
+                            html.Div(
+                                f"{f['crop_2025']} • {f['area_acres']:.1f} ac • {f['soil_type']}",
+                                className="search-result-meta",
+                            ),
+                        ],
+                        className="search-result-item",
+                        id={"type": "search-result", "index": f["id"]},
+                    )
+                )
+        
+        if not matches:
+            matches.append(
+                html.Div(
+                    html.Span("No fields found", className="text-muted"),
+                    className="search-result-item text-center py-3",
+                )
+            )
+        
+        return matches, {"display": "block"}
