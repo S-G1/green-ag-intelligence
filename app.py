@@ -80,6 +80,10 @@ demo_store = dcc.Store(id="demo-store", storage_type="session", data=False)
 selected_field_store = dcc.Store(id="selected-field-store", storage_type="session")
 active_section_store = dcc.Store(id="active-section", storage_type="session", data="overview")
 nav_collapsed_store = dcc.Store(id="nav-collapsed", storage_type="local", data=False)
+onboarding_open_store = dcc.Store(id="onboarding-open", storage_type="session", data=True)
+farm_selector_open_store = dcc.Store(id="farm-selector-open", storage_type="session", data=False)
+add_farm_open_store = dcc.Store(id="add-farm-open", storage_type="session", data=False)
+toast_store = dcc.Store(id="toast-message", storage_type="session")
 
 # =============================================================================
 # Download Components
@@ -197,6 +201,10 @@ app.layout = html.Div(
         selected_field_store,
         active_section_store,
         nav_collapsed_store,
+        onboarding_open_store,
+        farm_selector_open_store,
+        add_farm_open_store,
+        toast_store,
         
         # Downloads
         download_weather,

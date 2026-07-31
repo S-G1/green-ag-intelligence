@@ -70,63 +70,116 @@ def register_navigation_callbacks(app: dash.Dash) -> None:
         raise PreventUpdate
     
     # ─────────────────────────────────────────────────────────────────────────
-    # 4. Onboarding visibility
+    # 4. Onboarding overlay visibility — synced from onboarding-open store
     # ─────────────────────────────────────────────────────────────────────────
     @app.callback(
         Output("onboarding-overlay", "style"),
+        Input("onboarding-open", "data"),
+    )
+    def sync_onboarding_visibility(is_open):
+        """Sync onboarding overlay visibility from canonical store."""
+        if is_open:
+            return {"display": "flex"}
+        return {"display": "none"}
+    
+    # ─────────────────────────────────────────────────────────────────────────
+    # 5. Centralized onboarding action handler — ALL THREE BUTTONS
+    # ─────────────────────────────────────────────────────────────────────────
+    @app.callback(
+        Output("onboarding-open", "data"),
+        Output("farm-selector-open", "data"),
+        Output("add-farm-open", "data"),
+        Output("demo-store", "data"),
+        Output("ndvi-interval", "disabled", allow_duplicate=True),
+        Output("btn-ndvi-play", "className", allow_duplicate=True),
+        Output("demo-badge", "style", allow_duplicate=True),
+        Output("toast-message", "data"),
         Output("active-section", "data", allow_duplicate=True),
-        Input("onboarding-overlay", "style"),
         Input("onboarding-open-farm", "n_clicks"),
         Input("onboarding-add-farm", "n_clicks"),
         Input("onboarding-demo", "n_clicks"),
         prevent_initial_call=True,
     )
-    def handle_onboarding(style, open_clicks, add_clicks, demo_clicks):
-        """Handle onboarding dialog interactions."""
-        if not ctx.triggered:
-            return style, dash.no_update
+    def handle_onboarding_actions(open_clicks, add_clicks, demo_clicks):
+        """Central handler for all three onboarding actions.
         
-        triggered = ctx.triggered[0]["prop_id"].split(".")[0]
+        State transitions:
+        - Open Farm:   onboarding_open=False, farm_selector_open=True
+        - Add Farm:    onboarding_open=False, add_farm_open=True
+        - Demo Mode:   onboarding_open=False, demo_mode=True, start NDVI
+        """
+        triggered = ctx.triggered_id
         
-        if triggered in ["onboarding-open-farm", "onboarding-add-farm"]:
-            return {"display": "none"}, "overview"
+        if triggered == "onboarding-open-farm":
+            return (
+                False,           # onboarding-open
+                True,            # farm-selector-open
+                False,           # add-farm-open
+                dash.no_update,  # demo-store
+                dash.no_update,  # ndvi-interval
+                dash.no_update,  # btn-ndvi-play
+                dash.no_update,  # demo-badge
+                dash.no_update,  # toast-message
+                "overview",      # active-section
+            )
+        
+        elif triggered == "onboarding-add-farm":
+            return (
+                False,           # onboarding-open
+                False,           # farm-selector-open
+                True,            # add-farm-open
+                dash.no_update,  # demo-store
+                dash.no_update,  # ndvi-interval
+                dash.no_update,  # btn-ndvi-play
+                dash.no_update,  # demo-badge
+                dash.no_update,  # toast-message
+                "overview",      # active-section
+            )
+        
         elif triggered == "onboarding-demo":
-            return {"display": "none"}, "overview"
+            return (
+                False,                              # onboarding-open
+                False,                              # farm-selector-open
+                False,                              # add-farm-open
+                True,                               # demo-store
+                False,                              # ndvi-interval (start animation)
+                "ga-ndvi-play-btn playing",         # btn-ndvi-play
+                {"display": "flex"},                # demo-badge
+                "Demo Mode launched using Maryland Final Project Farm",  # toast-message
+                "overview",                         # active-section
+            )
         
-        return style, dash.no_update
+        raise PreventUpdate
     
     # ─────────────────────────────────────────────────────────────────────────
-    # 5. Demo mode toggle
+    # 6. Demo mode toggle (from header button + exit button)
     # ─────────────────────────────────────────────────────────────────────────
     @app.callback(
         Output("demo-badge", "style"),
-        Output("demo-store", "data"),
+        Output("demo-store", "data", allow_duplicate=True),
         Output("ndvi-interval", "disabled", allow_duplicate=True),
         Output("btn-ndvi-play", "className", allow_duplicate=True),
         Input("btn-demo-mode", "n_clicks"),
-        Input("onboarding-demo", "n_clicks"),
         Input("btn-exit-demo", "n_clicks"),
         State("demo-store", "data"),
         prevent_initial_call=True,
     )
-    def toggle_demo_mode(btn_clicks, onboarding_clicks, exit_clicks, demo_state):
-        """Toggle demo mode — starts NDVI animation automatically."""
+    def toggle_demo_mode(btn_clicks, exit_clicks, demo_state):
+        """Toggle demo mode from header button or exit button."""
         if not ctx.triggered:
             raise PreventUpdate
         
         triggered = ctx.triggered[0]["prop_id"].split(".")[0]
         
-        if triggered in ["btn-demo-mode", "onboarding-demo"]:
-            # Show badge, enable demo, start NDVI animation
+        if triggered == "btn-demo-mode":
             return {"display": "flex"}, True, False, "ga-ndvi-play-btn playing"
         elif triggered == "btn-exit-demo":
-            # Hide badge, disable demo, stop animation
             return {"display": "none"}, False, True, "ga-ndvi-play-btn"
         
         raise PreventUpdate
     
     # ─────────────────────────────────────────────────────────────────────────
-    # 6. Command palette toggle
+    # 7. Command palette toggle
     # ─────────────────────────────────────────────────────────────────────────
     @app.callback(
         Output("command-palette-overlay", "style"),
@@ -150,7 +203,7 @@ def register_navigation_callbacks(app: dash.Dash) -> None:
         raise PreventUpdate
     
     # ─────────────────────────────────────────────────────────────────────────
-    # 6b. Command palette filtering
+    # 7b. Command palette filtering
     # ─────────────────────────────────────────────────────────────────────────
     @app.callback(
         Output("command-palette-list", "children"),
@@ -187,7 +240,7 @@ def register_navigation_callbacks(app: dash.Dash) -> None:
         return filtered
     
     # ─────────────────────────────────────────────────────────────────────────
-    # 7. Command palette actions — execute commands
+    # 8. Command palette actions — execute commands
     # ─────────────────────────────────────────────────────────────────────────
     @app.callback(
         Output("command-palette-overlay", "style", allow_duplicate=True),
@@ -205,25 +258,20 @@ def register_navigation_callbacks(app: dash.Dash) -> None:
         if not ctx.triggered:
             raise PreventUpdate
         
-        # Find which item was clicked
         triggered = ctx.triggered[0]["prop_id"]
-        # Parse pattern-matching ID
         import json
-        # triggered looks like '{"index":"map","type":"command-item"}.n_clicks'
         try:
             id_json = triggered.split(".")[0]
             item_id = json.loads(id_json)["index"]
         except Exception:
             raise PreventUpdate
         
-        # Default no-change for most outputs
         no_update = dash.no_update
         
-        # Navigation commands
         nav_map = {
             "map": "map-explorer",
             "weather": "weather",
-            "table": "overview",  # field table is on overview
+            "table": "overview",
             "recommendations": "overview",
             "search": "overview",
         }
@@ -232,39 +280,30 @@ def register_navigation_callbacks(app: dash.Dash) -> None:
             return {"display": "none"}, nav_map[item_id], no_update, no_update, no_update, no_update, no_update
         
         elif item_id == "theme":
-            # Toggle theme — we need to read current theme, but we can't in this callback
-            # Just return light/dark toggle instruction via clientside if needed
-            # For now, we'll just close palette and let user use theme button
             return {"display": "none"}, no_update, no_update, no_update, no_update, no_update, no_update
         
         elif item_id == "demo":
-            # Launch demo mode
             return {"display": "none"}, "overview", no_update, True, False, "ga-ndvi-play-btn playing", no_update
         
         elif item_id == "export":
-            # Trigger weather export as example
             import pandas as pd
             from data import WEATHER_MONTHLY
             df = pd.DataFrame(WEATHER_MONTHLY)
             return {"display": "none"}, no_update, no_update, no_update, no_update, no_update, dash.dcc.send_data_frame(df.to_csv, "weather_export.csv", index=False)
         
         elif item_id == "refresh":
-            # Just close palette — refresh is a page reload
             return {"display": "none"}, no_update, no_update, no_update, no_update, no_update, no_update
         
         elif item_id == "reset":
-            # Close palette, go to overview
             return {"display": "none"}, "overview", no_update, no_update, no_update, no_update, no_update
         
         elif item_id == "help":
-            # Go to settings or show help — for now just close
             return {"display": "none"}, no_update, no_update, no_update, no_update, no_update, no_update
         
-        # Default: close palette
         return {"display": "none"}, no_update, no_update, no_update, no_update, no_update, no_update
     
     # ─────────────────────────────────────────────────────────────────────────
-    # 8. Nav rail collapse toggle
+    # 9. Nav rail collapse toggle
     # ─────────────────────────────────────────────────────────────────────────
     @app.callback(
         Output("nav-rail", "className"),
@@ -283,4 +322,3 @@ def register_navigation_callbacks(app: dash.Dash) -> None:
         width = "72px" if new_collapsed else "240px"
         
         return class_name, {"width": width}, new_collapsed
-    

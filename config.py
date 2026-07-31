@@ -251,8 +251,8 @@ MAP_CONFIG = {
 # =============================================================================
 
 ONBOARDING_OPTIONS = [
-    {"id": "open_farm", "label": "Open Existing Farm", "icon": "folder", "color": "primary"},
-    {"id": "add_farm", "label": "Add New Farm", "icon": "plus", "color": "secondary"},
+    {"id": "open-farm", "label": "Open Existing Farm", "icon": "folder", "color": "primary"},
+    {"id": "add-farm", "label": "Add New Farm", "icon": "plus", "color": "secondary"},
     {"id": "demo", "label": "Launch Demo Mode", "icon": "play", "color": "success"},
 ]
 
