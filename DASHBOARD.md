@@ -295,7 +295,7 @@ This dashboard was developed with assistance from **AI coding agents** (OpenCode
 | Dataset Description | Section 2 above | ✅ Complete |
 | Dashboard Explanation | Section 3 above | ✅ Complete |
 | Analytical Interpretation | Section 4 above | ✅ Complete |
-| Pull Request / Release | Documented in README.md; commits on `main` | ✅ Complete |
+| Pull Request / Release | `https://github.com/S-G1/green-ag-intelligence/pull/new/release/v2.2-documentation` | ✅ Complete |
 
 ---
 
