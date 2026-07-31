@@ -161,7 +161,7 @@ def create_soil_terrain_page() -> html.Div:
             dbc.Row(
                 [
                     dbc.Col(
-                        dcc.Graph(figure=fig_soil, config={"displayModeBar": False}),
+                                dcc.Graph(figure=fig_soil, config={"displayModeBar": False}, responsive=True),
                         className="ga-card p-3 mb-4",
                     ),
                 ],
@@ -172,7 +172,7 @@ def create_soil_terrain_page() -> html.Div:
             dbc.Row(
                 [
                     dbc.Col(
-                        dcc.Graph(figure=fig_elev, config={"displayModeBar": False}),
+                                dcc.Graph(figure=fig_elev, config={"displayModeBar": False}, responsive=True),
                         className="ga-card p-3 mb-4",
                     ),
                 ],

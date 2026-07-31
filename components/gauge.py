@@ -109,6 +109,7 @@ def create_gauge(field_id: str | None = None) -> html.Div:
                 config={"displayModeBar": False},
                 style={"height": "300px"},
                 className="ga-animate-fade",
+                responsive=True,
             ),
             
             # Risk category breakdown
@@ -135,6 +136,7 @@ def create_gauge(field_id: str | None = None) -> html.Div:
                         figure=hist_fig,
                         config={"displayModeBar": False},
                         style={"height": "60px"},
+                        responsive=True,
                     ),
                 ],
                 className="gauge-footer",

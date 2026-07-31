@@ -154,12 +154,12 @@ def create_reports_page() -> html.Div:
             dbc.Row(
                 [
                     dbc.Col(
-                        dcc.Graph(figure=fig_crops, config={"displayModeBar": False}),
+                                dcc.Graph(figure=fig_crops, config={"displayModeBar": False}, responsive=True),
                         lg=6,
                         className="ga-card p-3 mb-4",
                     ),
                     dbc.Col(
-                        dcc.Graph(figure=fig_stress, config={"displayModeBar": False}),
+                                dcc.Graph(figure=fig_stress, config={"displayModeBar": False}, responsive=True),
                         lg=6,
                         className="ga-card p-3 mb-4",
                     ),

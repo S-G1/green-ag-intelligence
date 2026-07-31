@@ -73,6 +73,7 @@ def create_ndvi_panel(field_id: str | None = None, month: int = 6, sort_by: str 
                 config={"displayModeBar": True, "modeBarButtonsToRemove": ["lasso2d", "select2d"]},
                 style={"height": "300px"},
                 className="ga-animate-fade",
+                responsive=True,
             ),
         ],
         className="ga-card",

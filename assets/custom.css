@@ -252,7 +252,7 @@ body {
 
 .ga-main {
   flex: 1;
-  padding: var(--space-lg) 0;
+  padding: var(--space-md) 0;
 }
 
 /* =============================================================================
@@ -579,6 +579,12 @@ body {
 .ga-kpi-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-card-hover);
+  cursor: pointer;
+}
+
+.ga-kpi-card:focus-visible {
+  outline: 3px solid var(--ga-primary);
+  outline-offset: 2px;
 }
 
 .ga-kpi-card:hover::before {
@@ -858,12 +864,13 @@ body {
 .ga-onboarding-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.5);
   z-index: var(--z-modal);
   display: flex;
   align-items: center;
   justify-content: center;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(2px);
+  transition: opacity 150ms ease;
 }
 
 .ga-onboarding {
@@ -1169,10 +1176,16 @@ body {
 }
 
 .weather-tab.active {
-  background: var(--ga-primary-bg, rgba(27, 94, 32, 0.1));
+  background: var(--ga-primary-bg, rgba(27, 94, 32, 0.15));
   color: var(--ga-primary);
   border-color: var(--ga-primary-light);
   font-weight: 600;
+  box-shadow: 0 0 0 2px var(--ga-primary-bg, rgba(27, 94, 32, 0.2));
+}
+
+.weather-tab:focus-visible {
+  outline: 2px solid var(--ga-primary);
+  outline-offset: 2px;
 }
 
 /* =============================================================================
@@ -1546,6 +1559,18 @@ body {
   
   .ga-filter-toolbar {
     flex-wrap: wrap;
+    gap: var(--space-xs);
+    padding: var(--space-sm);
+  }
+  
+  .ga-filter-group {
+    min-width: 100px;
+    flex: 1 1 auto;
+  }
+  
+  .ga-filter-btn {
+    flex: 1 1 auto;
+    min-width: 80px;
   }
   
   .ga-container {
@@ -1567,12 +1592,31 @@ body {
   }
   
   .ga-header-btn {
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
   }
   
   .ga-kpi-value {
     font-size: var(--font-size-metric-sm);
+  }
+  
+  .ga-table {
+    font-size: var(--font-size-caption);
+  }
+  
+  .ga-table th,
+  .ga-table td {
+    padding: var(--space-xs) var(--space-sm);
+  }
+  
+  .ga-card {
+    padding: var(--space-md);
+  }
+  
+  .ga-card-header {
+    flex-direction: column;
+    gap: var(--space-sm);
+    align-items: flex-start;
   }
 }
 
@@ -1930,13 +1974,14 @@ body {
 
 .toast-overlay {
   position: fixed;
-  top: var(--space-lg);
+  bottom: var(--space-lg);
   right: var(--space-lg);
   z-index: calc(var(--z-modal) + 10);
   display: flex;
   align-items: center;
   justify-content: flex-end;
   pointer-events: none;
+  max-width: 400px;
 }
 
 .toast-inner {

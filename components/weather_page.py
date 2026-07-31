@@ -165,7 +165,7 @@ def create_weather_page() -> html.Div:
             dbc.Row(
                 [
                     dbc.Col(
-                        dcc.Graph(figure=fig_temp, config={"displayModeBar": False}),
+                                dcc.Graph(figure=fig_temp, config={"displayModeBar": False}, responsive=True),
                         className="ga-card p-3 mb-4",
                     ),
                 ],
@@ -176,12 +176,12 @@ def create_weather_page() -> html.Div:
             dbc.Row(
                 [
                     dbc.Col(
-                        dcc.Graph(figure=fig_rain, config={"displayModeBar": False}),
+                                dcc.Graph(figure=fig_rain, config={"displayModeBar": False}, responsive=True),
                         lg=6,
                         className="ga-card p-3 mb-4",
                     ),
                     dbc.Col(
-                        dcc.Graph(figure=fig_stress, config={"displayModeBar": False}),
+                                dcc.Graph(figure=fig_stress, config={"displayModeBar": False}, responsive=True),
                         lg=6,
                         className="ga-card p-3 mb-4",
                     ),

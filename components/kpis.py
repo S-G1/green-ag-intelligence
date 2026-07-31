@@ -177,4 +177,4 @@ def _create_sparkline(kpi_id: str) -> dcc.Graph:
         height=40,
     )
     
-    return dcc.Graph(figure=fig, config={"displayModeBar": False}, style={"height": "40px"})
+    return dcc.Graph(figure=fig, config={"displayModeBar": False}, style={"height": "40px"}, responsive=True)

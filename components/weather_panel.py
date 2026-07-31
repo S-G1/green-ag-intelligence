@@ -76,6 +76,7 @@ def create_weather_panel(year: int = 2025, active_tab: str = "combined") -> html
                 },
                 style={"height": "400px"},
                 className="ga-animate-fade",
+                responsive=True,
             ),
         ],
         className="ga-card",

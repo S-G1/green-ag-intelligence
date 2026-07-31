@@ -118,6 +118,7 @@ def create_map_explorer_page() -> html.Div:
                                     figure=fig,
                                     config={"displayModeBar": True, "scrollZoom": True},
                                     style={"height": "calc(100vh - 240px)", "minHeight": "500px"},
+                                    responsive=True,
                                 ),
                                 className="ga-card p-0 overflow-hidden",
                             ),

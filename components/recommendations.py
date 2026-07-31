@@ -38,17 +38,17 @@ def create_recommendations() -> html.Div:
                                     html.Button(
                                         "View Field",
                                         className="ga-card-btn me-2",
-                                        id=f"rec-view-{rec['id']}",
+                                        id={"type": "rec-view", "index": rec["id"]},
                                     ),
                                     html.Button(
                                         "Open Report",
                                         className="ga-card-btn me-2",
-                                        id=f"rec-report-{rec['id']}",
+                                        id={"type": "rec-report", "index": rec["id"]},
                                     ),
                                     html.Button(
                                         "📥 Summary",
                                         className="ga-card-btn",
-                                        id=f"rec-summary-{rec['id']}",
+                                        id={"type": "rec-summary", "index": rec["id"]},
                                     ),
                                 ],
                                 className="ga-rec-actions",
@@ -76,6 +76,7 @@ def create_recommendations() -> html.Div:
             html.Div(cards, className="d-flex flex-column gap-3"),
         ],
         className="ga-card",
+        id="recommendations-section",
     )
 
 

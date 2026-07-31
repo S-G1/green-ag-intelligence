@@ -7,6 +7,7 @@ import plotly.graph_objects as go
 
 from config import MAP_CONFIG, COLORS
 from data import FIELDS
+from utils.chart_theme import get_paper_bgcolor, get_plot_bgcolor
 
 # All 10 map layers
 ALL_LAYERS = [
@@ -83,6 +84,7 @@ def create_map(selected_field: str | None = None, layer: str = "ndvi") -> html.D
                         },
                         style={"height": "500px"},
                         className="ga-animate-fade",
+                        responsive=True,
                     ),
                 ],
                 className="ga-map-container",
@@ -138,8 +140,8 @@ def _build_map_figure(selected_field: str | None, layer: str) -> go.Figure:
         },
         margin={"l": 0, "r": 0, "t": 0, "b": 0},
         showlegend=False,
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor=get_paper_bgcolor(),
+        plot_bgcolor=get_plot_bgcolor(),
         height=500,
     )
     

@@ -141,7 +141,7 @@ def create_crop_health_page() -> html.Div:
                     dbc.Row(
                         [
                             dbc.Col(
-                                dcc.Graph(figure=fig_compare, config={"displayModeBar": False}),
+                                dcc.Graph(figure=fig_compare, config={"displayModeBar": False}, responsive=True),
                                 className="ga-card p-3",
                             ),
                         ],
@@ -156,7 +156,7 @@ def create_crop_health_page() -> html.Div:
                     dbc.Row(
                         [
                             dbc.Col(
-                                dcc.Graph(figure=fig_heatmap, config={"displayModeBar": False}),
+                                dcc.Graph(figure=fig_heatmap, config={"displayModeBar": False}, responsive=True),
                                 className="ga-card p-3",
                             ),
                         ],

@@ -127,6 +127,7 @@ def create_field_table(search: str = "", page: int = 0, page_size: int = 5) -> h
             pagination,
         ],
         className="ga-card",
+        id="field-table",
     )
 
 

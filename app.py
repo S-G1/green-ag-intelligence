@@ -55,6 +55,7 @@ from callbacks.interactions import register_interaction_callbacks
 from callbacks.navigation import register_navigation_callbacks
 from callbacks.theme import register_theme_callbacks
 from callbacks.export import register_export_callbacks
+from callbacks.ui_controls import register_ui_control_callbacks
 
 # =============================================================================
 # Application Instance
@@ -282,6 +283,7 @@ register_interaction_callbacks(app)
 register_navigation_callbacks(app)
 register_theme_callbacks(app)
 register_export_callbacks(app)
+register_ui_control_callbacks(app)
 
 # =============================================================================
 # Clientside Callbacks
