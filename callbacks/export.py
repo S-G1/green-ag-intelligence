@@ -1,4 +1,4 @@
-"""Export callbacks — CSV and PDF export functionality."""
+"""Export callbacks — CSV, Excel, and PDF export functionality."""
 
 from __future__ import annotations
 
@@ -76,3 +76,54 @@ def register_export_callbacks(app: dash.Dash) -> None:
         ])
         
         return dash.dcc.send_data_frame(df.to_csv, "ndvi_data.csv", index=False)
+    
+    @app.callback(
+        Output("download-excel", "data"),
+        Input("btn-export-excel", "n_clicks"),
+        prevent_initial_call=True,
+    )
+    def export_excel(n_clicks):
+        """Export field data as Excel file with multiple sheets."""
+        if n_clicks is None:
+            raise PreventUpdate
+        
+        # Create Excel file with multiple sheets
+        output = "/tmp/green_ag_data.xlsx"
+        
+        with pd.ExcelWriter(output, engine="openpyxl") as writer:
+            # Sheet 1: Fields
+            fields_df = pd.DataFrame([
+                {
+                    "Field": f["name"],
+                    "Acres": f["area_acres"],
+                    "Crop": f["crop_2025"],
+                    "NDVI_July": f["ndvi_2025"][6],
+                    "Soil_Type": f["soil_type"],
+                    "Elevation_m": f["elevation_min_m"],
+                    "Slope_pct": f["slope_percent"],
+                    "Stress_Index": f["stress_index"],
+                    "Drainage": f["drainage"],
+                    "pH": f["ph"],
+                    "OM_pct": f["om_pct"],
+                    "CEC": f["cec"],
+                }
+                for f in FIELDS
+            ])
+            fields_df.to_excel(writer, sheet_name="Fields", index=False)
+            
+            # Sheet 2: Weather
+            weather_df = pd.DataFrame(WEATHER_MONTHLY)
+            weather_df.to_excel(writer, sheet_name="Weather", index=False)
+            
+            # Sheet 3: NDVI
+            months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+            ndvi_df = pd.DataFrame([
+                {
+                    "Field": f["name"],
+                    **{month: ndvi for month, ndvi in zip(months, f["ndvi_2025"])},
+                }
+                for f in FIELDS
+            ])
+            ndvi_df.to_excel(writer, sheet_name="NDVI", index=False)
+        
+        return dash.dcc.send_file(output, filename="green_ag_data.xlsx")

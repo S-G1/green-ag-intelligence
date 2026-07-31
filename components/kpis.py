@@ -1,12 +1,12 @@
-"""KPI Cards component — 6 metric cards with sparklines and trends."""
+"""KPI Cards component — Enhanced with animations, tooltips, and click filtering."""
 
 from __future__ import annotations
 
 import dash_bootstrap_components as dbc
-from dash import html
+from dash import html, dcc
 import plotly.graph_objects as go
 
-from config import KPI_CONFIG, COLORS
+from config import KPI_CONFIG, COLORS, TYPOGRAPHY
 from data import (
     get_total_acres, get_avg_stress, get_high_risk_count,
     get_well_drained_count, get_avg_ndvi, FIELDS
@@ -14,13 +14,14 @@ from data import (
 
 
 def create_kpi_cards() -> html.Div:
-    """Build the KPI cards grid."""
+    """Build the KPI cards grid with enhanced interactions."""
     cards = []
     
-    for kpi in KPI_CONFIG:
+    for i, kpi in enumerate(KPI_CONFIG):
         value = _get_kpi_value(kpi["id"])
         trend = _get_kpi_trend(kpi["id"])
         icon_class = _get_kpi_icon_class(kpi["id"])
+        tooltip = _get_kpi_tooltip(kpi["id"])
         
         cards.append(
             dbc.Col(
@@ -42,14 +43,30 @@ def create_kpi_cards() -> html.Div:
                             ],
                             className="ga-kpi-header",
                         ),
-                        html.Div(value, className="ga-kpi-value"),
+                        html.Div(
+                            value,
+                            className="ga-kpi-value",
+                            id=f"kpi-value-{kpi['id']}",
+                        ),
                         html.Div(kpi["label"], className="ga-kpi-label"),
+                        
+                        # Sparkline
                         html.Div(
                             _create_sparkline(kpi["id"]),
                             className="ga-kpi-sparkline",
                         ),
+                        
+                        # Hidden tooltip content
+                        html.Div(
+                            tooltip,
+                            id=f"kpi-tooltip-{kpi['id']}",
+                            style={"display": "none"},
+                        ),
                     ],
-                    className="ga-kpi-card ga-animate-fade-up",
+                    className=f"ga-kpi-card ga-animate-fade-up",
+                    id=f"kpi-card-{kpi['id']}",
+                    style={"animation-delay": f"{i * 50}ms"},
+                    **{"data-kpi-id": kpi["id"]},
                 ),
                 xs=6,
                 md=4,
@@ -58,7 +75,7 @@ def create_kpi_cards() -> html.Div:
             )
         )
     
-    return html.Div(dbc.Row(cards, className="ga-kpi-grid"))
+    return html.Div(dbc.Row(cards, className="ga-kpi-grid ga-stagger"))
 
 
 def _get_kpi_value(kpi_id: str) -> str:
@@ -114,9 +131,21 @@ def _get_kpi_icon(icon_name: str) -> str:
     return icons.get(icon_name, "📈")
 
 
-def _create_sparkline(kpi_id: str) -> dbc.Spinner:
+def _get_kpi_tooltip(kpi_id: str) -> str:
+    """Get tooltip definition for a KPI."""
+    tooltips = {
+        "total_fields": "Total number of active fields being monitored in the current farm.",
+        "total_acres": "Combined area of all fields in acres. Based on field boundary calculations.",
+        "avg_ndvi": "Normalized Difference Vegetation Index (0-1). Higher values indicate healthier vegetation.",
+        "avg_stress": "Composite stress index (0-100). Combines heat, moisture, and vegetation stress factors.",
+        "high_risk": "Number of fields requiring immediate attention due to stress index > 35.",
+        "well_drained": "Fields with adequate drainage. Poor drainage can lead to waterlogging and root diseases.",
+    }
+    return tooltips.get(kpi_id, "")
+
+
+def _create_sparkline(kpi_id: str) -> dcc.Graph:
     """Create a mini sparkline chart for a KPI."""
-    # Generate sparkline data based on KPI type
     if kpi_id == "avg_ndvi":
         y_data = [0.45, 0.52, 0.61, 0.73, 0.82, 0.85, 0.83, 0.78, 0.65, 0.48, 0.38, 0.42]
         color = COLORS["leaf_green"]
@@ -149,7 +178,3 @@ def _create_sparkline(kpi_id: str) -> dbc.Spinner:
     )
     
     return dcc.Graph(figure=fig, config={"displayModeBar": False}, style={"height": "40px"})
-
-
-# Need to import dcc for sparklines
-from dash import dcc

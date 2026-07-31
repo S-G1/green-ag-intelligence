@@ -1,4 +1,4 @@
-"""NDVI Panel — Chart with slider and play/loop animation."""
+"""NDVI Panel — Interactive bar chart with sorting and field filter."""
 
 from __future__ import annotations
 
@@ -9,18 +9,30 @@ import numpy as np
 from data import FIELDS, get_months
 
 
-def create_ndvi_panel(field_id: str | None = None, month: int = 6) -> html.Div:
-    """Build the NDVI panel with chart, slider, and controls."""
-    fig = _build_ndvi_figure(field_id, month)
+def create_ndvi_panel(field_id: str | None = None, month: int = 6, sort_by: str = "value") -> html.Div:
+    """Build the NDVI panel with bar chart, slider, and controls."""
+    fig = _build_ndvi_bar_chart(field_id, month, sort_by)
     months = get_months()
     
     return html.Div(
         [
             html.Div(
                 [
-                    html.Div("NDVI Trend", className="ga-card-title"),
+                    html.Div("NDVI Comparison", className="ga-card-title"),
                     html.Div(
                         [
+                            dcc.Dropdown(
+                                id="ndvi-sort",
+                                options=[
+                                    {"label": "Sort: Value", "value": "value"},
+                                    {"label": "Sort: Name", "value": "name"},
+                                    {"label": "Sort: Risk", "value": "risk"},
+                                ],
+                                value="value",
+                                clearable=False,
+                                className="ndvi-sort-dropdown",
+                                style={"width": "120px"},
+                            ),
                             html.Button(
                                 "▶",
                                 id="btn-ndvi-play",
@@ -67,79 +79,90 @@ def create_ndvi_panel(field_id: str | None = None, month: int = 6) -> html.Div:
     )
 
 
-def _build_ndvi_figure(field_id: str | None, highlight_month: int) -> go.Figure:
-    """Build the NDVI time series figure."""
-    months = get_months()
+def _build_ndvi_bar_chart(field_id: str | None, month: int, sort_by: str) -> go.Figure:
+    """Build the NDVI bar chart with sorting."""
+    
+    # Prepare data
+    data = []
+    for f in FIELDS:
+        ndvi = f["ndvi_2025"][month]
+        data.append({
+            "name": f["name"],
+            "ndvi": ndvi,
+            "stress": f["stress_index"],
+            "id": f["id"],
+        })
+    
+    # Sort
+    if sort_by == "value":
+        data.sort(key=lambda x: x["ndvi"], reverse=True)
+    elif sort_by == "name":
+        data.sort(key=lambda x: x["name"])
+    elif sort_by == "risk":
+        data.sort(key=lambda x: x["stress"], reverse=True)
+    
+    names = [d["name"] for d in data]
+    ndvi_values = [d["ndvi"] for d in data]
+    colors = [_ndvi_color(v) for v in ndvi_values]
+    
     fig = go.Figure()
     
+    # Add average line
+    avg_ndvi = np.mean(ndvi_values)
+    fig.add_hline(
+        y=avg_ndvi,
+        line_dash="dash",
+        line_color="#757575",
+        line_width=2,
+        annotation_text=f"Avg: {avg_ndvi:.2f}",
+        annotation_position="right",
+    )
+    
+    # Add bars
+    fig.add_trace(go.Bar(
+        x=names,
+        y=ndvi_values,
+        marker_color=colors,
+        text=[f"{v:.2f}" for v in ndvi_values],
+        textposition="outside",
+        textfont={"size": 10},
+        hovertemplate="<b>%{x}</b><br>NDVI: %{y:.3f}<extra></extra>",
+    ))
+    
+    # Highlight selected field
     if field_id:
-        # Single field
-        field = next((f for f in FIELDS if f["id"] == field_id), FIELDS[0])
-        fig.add_trace(go.Scatter(
-            x=months,
-            y=field["ndvi_2025"],
-            mode="lines+markers",
-            name=field["name"],
-            line={"color": "#1B5E20", "width": 3},
-            marker={"size": 8, "color": "#1B5E20"},
-            fill="tozeroy",
-            fillcolor="rgba(27, 94, 32, 0.1)",
-        ))
-    else:
-        # All fields average
-        avg_ndvi = [np.mean([f["ndvi_2025"][i] for f in FIELDS]) for i in range(12)]
-        fig.add_trace(go.Scatter(
-            x=months,
-            y=avg_ndvi,
-            mode="lines+markers",
-            name="Average",
-            line={"color": "#1B5E20", "width": 3},
-            marker={"size": 8},
-            fill="tozeroy",
-            fillcolor="rgba(27, 94, 32, 0.1)",
-        ))
-        
-        # Add individual field lines (faint)
-        colors = ["#42A5F5", "#F57F17", "#7B1FA2", "#C62828"]
-        for i, f in enumerate(FIELDS[:4]):
-            fig.add_trace(go.Scatter(
-                x=months,
-                y=f["ndvi_2025"],
-                mode="lines",
-                name=f["name"],
-                line={"color": colors[i], "width": 1, "dash": "dot"},
-                opacity=0.5,
-            ))
-    
-    # Highlight current month with a shape
-    fig.add_shape(
-        type="line",
-        x0=highlight_month,
-        x1=highlight_month,
-        y0=0,
-        y1=1,
-        yref="paper",
-        line=dict(color="#F57F17", width=2, dash="dash"),
-    )
-    
-    fig.add_annotation(
-        x=highlight_month,
-        y=1.02,
-        yref="paper",
-        text="Current",
-        showarrow=False,
-        font=dict(color="#F57F17", size=12),
-    )
+        for i, d in enumerate(data):
+            if d["id"] == field_id:
+                fig.add_annotation(
+                    x=d["name"],
+                    y=d["ndvi"] + 0.05,
+                    text="★",
+                    showarrow=False,
+                    font={"size": 16, "color": "#F57F17"},
+                )
     
     fig.update_layout(
         title="",
         xaxis_title="",
         yaxis_title="NDVI",
-        yaxis_range=[0, 1],
+        yaxis_range=[0, 1.1],
         template="plotly_white",
-        margin={"l": 40, "r": 20, "t": 20, "b": 40},
+        margin={"l": 40, "r": 20, "t": 20, "b": 60},
         showlegend=False,
         hovermode="x unified",
+        xaxis={"tickangle": -30, "tickfont": {"size": 9}},
     )
     
     return fig
+
+
+def _ndvi_color(ndvi: float) -> str:
+    """Get color based on NDVI value."""
+    if ndvi >= 0.7:
+        return "#2E7D32"  # Healthy
+    elif ndvi >= 0.5:
+        return "#F9A825"  # Moderate
+    elif ndvi >= 0.3:
+        return "#F57F17"  # Poor
+    else:
+        return "#C62828"  # Critical
