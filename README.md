@@ -243,5 +243,7 @@ Apache-2.0
 - **GitHub Repository**: https://github.com/S-G1/green-ag-intelligence
 - **Dashboard Info**: See `DASHBOARD.md` for supplementary documentation
 - **Supplementary Documentation**: See `DASHBOARD.md` for project overview, dataset description, dashboard explanation, analytical interpretation, and AI usage documentation.
-- **Pull Request**: All changes committed directly to `main`. See commit history: `git log --oneline`
+- **Pull Request**: https://github.com/S-G1/green-ag-intelligence/pull/new/release/v2.2-documentation
+  (Branch: `release/v2.2-documentation` → `main`)
 - **Hosted Dashboard**: Deploy via Render blueprint (`render.yaml`) — see Quick Start above
+- **Live Demo URL**: Configure via Render Dashboard after connecting repo
