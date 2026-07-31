@@ -271,12 +271,21 @@ def register_ui_control_callbacks(app: dash.Dash) -> None:
         prevent_initial_call=True,
     )
     def rec_report_button(n_clicks_list):
+        """Show report preview toast ONLY when a specific button is clicked."""
         if not ctx.triggered:
             raise PreventUpdate
-        triggered = ctx.triggered[0]["prop_id"]
+        
+        triggered = ctx.triggered[0]
+        prop_id = triggered["prop_id"]
+        value = triggered["value"]
+        
+        # Must be a real click (value > 0)
+        if not value or value == 0:
+            raise PreventUpdate
+        
         import json
         try:
-            rec_id = json.loads(triggered.split(".")[0])["index"]
+            rec_id = json.loads(prop_id.split(".")[0])["index"]
         except Exception:
             raise PreventUpdate
         return f"Report for {rec_id} — opening farm report preview"
@@ -287,12 +296,22 @@ def register_ui_control_callbacks(app: dash.Dash) -> None:
         prevent_initial_call=True,
     )
     def rec_summary_download(n_clicks_list):
+        """Download recommendation summary ONLY when a specific button is clicked."""
         if not ctx.triggered:
             raise PreventUpdate
-        triggered = ctx.triggered[0]["prop_id"]
+        
+        # Critical: verify the click count is > 0, not just that the component exists
+        triggered = ctx.triggered[0]
+        prop_id = triggered["prop_id"]
+        value = triggered["value"]
+        
+        # Must be a real click (value > 0), not initial render (value is None or 0)
+        if not value or value == 0:
+            raise PreventUpdate
+        
         import json
         try:
-            rec_id = json.loads(triggered.split(".")[0])["index"]
+            rec_id = json.loads(prop_id.split(".")[0])["index"]
         except Exception:
             raise PreventUpdate
         

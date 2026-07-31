@@ -861,28 +861,10 @@ body {
    Onboarding Dialog
    ============================================================================= */
 
-.ga-onboarding-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: var(--z-modal);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  backdrop-filter: blur(2px);
-  transition: opacity 150ms ease;
-}
-
-.ga-onboarding {
-  width: 100%;
-  max-width: 560px;
-  background: var(--ga-bg-card);
-  border: 1px solid var(--ga-border);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-xl);
-  padding: var(--space-2xl);
-  text-align: center;
-}
+/* Onboarding dialog — now rendered via dbc.Modal.
+   The .ga-onboarding-overlay and .ga-onboarding wrappers are obsolete;
+   styling targets remain in use via .ga-onboarding-logo, .ga-onboarding-option, etc.
+*/
 
 .ga-onboarding-logo {
   width: 64px;
@@ -1851,7 +1833,6 @@ body {
   inset: 0;
   background: rgba(0, 0, 0, 0.5);
   z-index: calc(var(--z-modal) - 1);
-  backdrop-filter: blur(2px);
 }
 
 .modal-container {

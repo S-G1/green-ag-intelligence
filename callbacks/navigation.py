@@ -75,12 +75,34 @@ def register_navigation_callbacks(app: dash.Dash) -> None:
     # 4. Onboarding overlay visibility — synced from canonical store
     # ─────────────────────────────────────────────────────────────────────────
     @app.callback(
-        Output("onboarding-overlay", "style"),
+        Output("onboarding-overlay", "is_open"),
         Input("onboarding-open", "data"),
     )
     def sync_onboarding_visibility(is_open):
+        return bool(is_open)
+    
+    # ─────────────────────────────────────────────────────────────────────────
+    # 4b. Farm selector backdrop visibility
+    # ─────────────────────────────────────────────────────────────────────────
+    @app.callback(
+        Output("farm-selector-backdrop", "style"),
+        Input("farm-selector-open", "data"),
+    )
+    def sync_farm_selector_backdrop(is_open):
         if is_open:
-            return {"display": "flex"}
+            return {"display": "block"}
+        return {"display": "none"}
+    
+    # ─────────────────────────────────────────────────────────────────────────
+    # 4c. Add farm backdrop visibility
+    # ─────────────────────────────────────────────────────────────────────────
+    @app.callback(
+        Output("add-farm-backdrop", "style"),
+        Input("add-farm-open", "data"),
+    )
+    def sync_add_farm_backdrop(is_open):
+        if is_open:
+            return {"display": "block"}
         return {"display": "none"}
     
     # ─────────────────────────────────────────────────────────────────────────
@@ -174,11 +196,15 @@ def register_navigation_callbacks(app: dash.Dash) -> None:
         Output("onboarding-open", "data", allow_duplicate=True),
         Input("btn-cancel-farm-selector", "n_clicks"),
         Input("btn-close-farm-selector", "n_clicks"),
+        State("selected-farm-id", "data"),
         prevent_initial_call=True,
     )
-    def close_farm_selector(cancel_clicks, close_clicks):
+    def close_farm_selector(cancel_clicks, close_clicks, selected_farm_id):
+        """Close farm selector. Only reopen onboarding if no farm was selected."""
         if ctx.triggered:
-            return False, True
+            # Only reopen onboarding if no farm is currently selected
+            should_show_onboarding = selected_farm_id is None
+            return False, should_show_onboarding
         raise PreventUpdate
     
     # ─────────────────────────────────────────────────────────────────────────
@@ -322,11 +348,14 @@ def register_navigation_callbacks(app: dash.Dash) -> None:
         Output("onboarding-open", "data", allow_duplicate=True),
         Input("btn-cancel-add-farm", "n_clicks"),
         Input("btn-close-add-farm", "n_clicks"),
+        State("selected-farm-id", "data"),
         prevent_initial_call=True,
     )
-    def close_add_farm(cancel_clicks, close_clicks):
+    def close_add_farm(cancel_clicks, close_clicks, selected_farm_id):
+        """Close add-farm modal. Only reopen onboarding if no farm was selected."""
         if ctx.triggered:
-            return False, True
+            should_show_onboarding = selected_farm_id is None
+            return False, should_show_onboarding
         raise PreventUpdate
     
     # ─────────────────────────────────────────────────────────────────────────

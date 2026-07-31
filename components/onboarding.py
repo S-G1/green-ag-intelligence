@@ -1,14 +1,16 @@
-"""Onboarding component — First-time welcome dialog with accessible buttons."""
+"""Onboarding component — First-time welcome dialog using dbc.Modal."""
 
 from __future__ import annotations
 
+import dash_bootstrap_components as dbc
 from dash import html
 
 from config import APP_NAME, APP_SUBTITLE, ONBOARDING_OPTIONS
 
 
-def create_onboarding() -> html.Div:
-    """Build the onboarding dialog with accessible button options."""
+def create_onboarding() -> dbc.Modal:
+    """Build the onboarding dialog using Bootstrap Modal for proper backdrop management."""
+    
     options = []
     for opt in ONBOARDING_OPTIONS:
         desc = (
@@ -41,20 +43,26 @@ def create_onboarding() -> html.Div:
             )
         )
     
-    return html.Div(
+    return dbc.Modal(
         [
-            html.Div(
+            dbc.ModalHeader(
                 [
                     html.Div("🌱", className="ga-onboarding-logo", **{"aria-hidden": "true"}),
                     html.H1(APP_NAME, className="ga-onboarding-title"),
                     html.P(APP_SUBTITLE, className="ga-onboarding-subtitle"),
-                    html.Div(options, className="ga-onboarding-options"),
                 ],
-                className="ga-onboarding",
-                **{"role": "dialog", "aria-modal": "true", "aria-labelledby": "onboarding-title"},
+                close_button=False,
+                className="border-0 text-center pb-0",
+            ),
+            dbc.ModalBody(
+                html.Div(options, className="ga-onboarding-options"),
+                className="pt-0",
             ),
         ],
         id="onboarding-overlay",
-        className="ga-onboarding-overlay",
-        style={"display": "flex"},
+        is_open=True,  # Initially open
+        backdrop="static",  # Don't close on backdrop click
+        keyboard=False,  # Don't close on Escape
+        centered=True,
+        className="ga-onboarding-modal",
     )
