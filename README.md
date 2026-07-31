@@ -228,7 +228,7 @@ Monthly aggregates from **NASA POWER S3 Zarr**:
 
 ## 👤 Author
 
-**Stephon Green** — Agricultural Data Analytics | Geospatial Intelligence
+**Stephon Green** 
 
 ---
 
