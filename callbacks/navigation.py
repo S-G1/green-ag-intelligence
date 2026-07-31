@@ -1,4 +1,4 @@
-"""Navigation callbacks — Page routing, onboarding, demo mode, command palette."""
+"""Navigation callbacks — Page routing, onboarding, farm selector, add farm, demo mode, command palette, toast."""
 
 from __future__ import annotations
 
@@ -10,8 +10,15 @@ from config import DEMO_CONFIG, COMMAND_ACTIONS
 from components.nav_rail import NAV_ITEMS
 
 
+# =============================================================================
+# In-memory farm registry (session-scoped, not persisted to disk)
+# =============================================================================
+
+_user_farms: dict[str, dict] = {}
+
+
 def register_navigation_callbacks(app: dash.Dash) -> None:
-    """Register navigation, routing, demo, and command palette callbacks."""
+    """Register all navigation, modal, and workflow callbacks."""
     
     # ─────────────────────────────────────────────────────────────────────────
     # 1. Nav rail click → update active-section store
@@ -24,7 +31,6 @@ def register_navigation_callbacks(app: dash.Dash) -> None:
         prevent_initial_call=True,
     )
     def on_nav_click(*_):
-        """Update active section when nav item clicked."""
         if not ctx.triggered:
             raise PreventUpdate
         triggered_id = ctx.triggered[0]["prop_id"].split(".")[0]
@@ -42,18 +48,14 @@ def register_navigation_callbacks(app: dash.Dash) -> None:
         Input("active-section", "data"),
     )
     def update_page(section):
-        """Switch page content and highlight active nav item."""
         from app import create_page
-        
         page = create_page(section)
-        
         classes = []
         for item in NAV_ITEMS:
             base = "nav-rail-item"
             if item["id"] == section:
                 base += " active"
             classes.append(base)
-        
         return [page] + classes
     
     # ─────────────────────────────────────────────────────────────────────────
@@ -70,14 +72,13 @@ def register_navigation_callbacks(app: dash.Dash) -> None:
         raise PreventUpdate
     
     # ─────────────────────────────────────────────────────────────────────────
-    # 4. Onboarding overlay visibility — synced from onboarding-open store
+    # 4. Onboarding overlay visibility — synced from canonical store
     # ─────────────────────────────────────────────────────────────────────────
     @app.callback(
         Output("onboarding-overlay", "style"),
         Input("onboarding-open", "data"),
     )
     def sync_onboarding_visibility(is_open):
-        """Sync onboarding overlay visibility from canonical store."""
         if is_open:
             return {"display": "flex"}
         return {"display": "none"}
@@ -101,58 +102,235 @@ def register_navigation_callbacks(app: dash.Dash) -> None:
         prevent_initial_call=True,
     )
     def handle_onboarding_actions(open_clicks, add_clicks, demo_clicks):
-        """Central handler for all three onboarding actions.
-        
-        State transitions:
-        - Open Farm:   onboarding_open=False, farm_selector_open=True
-        - Add Farm:    onboarding_open=False, add_farm_open=True
-        - Demo Mode:   onboarding_open=False, demo_mode=True, start NDVI
-        """
         triggered = ctx.triggered_id
         
         if triggered == "onboarding-open-farm":
-            return (
-                False,           # onboarding-open
-                True,            # farm-selector-open
-                False,           # add-farm-open
-                dash.no_update,  # demo-store
-                dash.no_update,  # ndvi-interval
-                dash.no_update,  # btn-ndvi-play
-                dash.no_update,  # demo-badge
-                dash.no_update,  # toast-message
-                "overview",      # active-section
-            )
+            return (False, True, False, dash.no_update, dash.no_update,
+                    dash.no_update, dash.no_update, dash.no_update, "overview")
         
         elif triggered == "onboarding-add-farm":
-            return (
-                False,           # onboarding-open
-                False,           # farm-selector-open
-                True,            # add-farm-open
-                dash.no_update,  # demo-store
-                dash.no_update,  # ndvi-interval
-                dash.no_update,  # btn-ndvi-play
-                dash.no_update,  # demo-badge
-                dash.no_update,  # toast-message
-                "overview",      # active-section
-            )
+            return (False, False, True, dash.no_update, dash.no_update,
+                    dash.no_update, dash.no_update, dash.no_update, "overview")
         
         elif triggered == "onboarding-demo":
-            return (
-                False,                              # onboarding-open
-                False,                              # farm-selector-open
-                False,                              # add-farm-open
-                True,                               # demo-store
-                False,                              # ndvi-interval (start animation)
-                "ga-ndvi-play-btn playing",         # btn-ndvi-play
-                {"display": "flex"},                # demo-badge
-                "Demo Mode launched using Maryland Final Project Farm",  # toast-message
-                "overview",                         # active-section
-            )
+            return (False, False, False, True, False,
+                    "ga-ndvi-play-btn playing", {"display": "flex"},
+                    "Demo Mode launched using Maryland Final Project Farm", "overview")
         
         raise PreventUpdate
     
     # ─────────────────────────────────────────────────────────────────────────
-    # 6. Demo mode toggle (from header button + exit button)
+    # 6. Farm Selector visibility sync
+    # ─────────────────────────────────────────────────────────────────────────
+    @app.callback(
+        Output("farm-selector-wrapper", "style"),
+        Input("farm-selector-open", "data"),
+    )
+    def sync_farm_selector_visibility(is_open):
+        if is_open:
+            return {"display": "block"}
+        return {"display": "none"}
+    
+    # ─────────────────────────────────────────────────────────────────────────
+    # 7. Farm selection — click a farm item
+    # ─────────────────────────────────────────────────────────────────────────
+    @app.callback(
+        Output("selected-farm-id", "data"),
+        Output("selected-grower", "data"),
+        Output("btn-open-selected-farm", "disabled"),
+        Output("farm-check-md-caroline-farm", "style"),
+        Input("farm-item-md-caroline-farm", "n_clicks"),
+        prevent_initial_call=True,
+    )
+    def select_farm(n_clicks):
+        if n_clicks:
+            return "md-caroline-farm", "md-grower", False, {"display": "block"}
+        raise PreventUpdate
+    
+    # ─────────────────────────────────────────────────────────────────────────
+    # 8. Open selected farm from farm selector
+    # ─────────────────────────────────────────────────────────────────────────
+    @app.callback(
+        Output("farm-selector-open", "data", allow_duplicate=True),
+        Output("selected-grower", "data", allow_duplicate=True),
+        Output("selected-farm-id", "data", allow_duplicate=True),
+        Output("toast-message", "data", allow_duplicate=True),
+        Output("active-section", "data", allow_duplicate=True),
+        Input("btn-open-selected-farm", "n_clicks"),
+        State("selected-farm-id", "data"),
+        prevent_initial_call=True,
+    )
+    def open_selected_farm(n_clicks, farm_id):
+        if n_clicks and farm_id:
+            return (False, "md-grower", farm_id,
+                    f"Opened {farm_id}", "overview")
+        raise PreventUpdate
+    
+    # ─────────────────────────────────────────────────────────────────────────
+    # 9. Cancel / close farm selector
+    # ─────────────────────────────────────────────────────────────────────────
+    @app.callback(
+        Output("farm-selector-open", "data", allow_duplicate=True),
+        Output("onboarding-open", "data", allow_duplicate=True),
+        Input("btn-cancel-farm-selector", "n_clicks"),
+        Input("btn-close-farm-selector", "n_clicks"),
+        prevent_initial_call=True,
+    )
+    def close_farm_selector(cancel_clicks, close_clicks):
+        if ctx.triggered:
+            return False, True
+        raise PreventUpdate
+    
+    # ─────────────────────────────────────────────────────────────────────────
+    # 10. Add New Farm from farm selector
+    # ─────────────────────────────────────────────────────────────────────────
+    @app.callback(
+        Output("farm-selector-open", "data", allow_duplicate=True),
+        Output("add-farm-open", "data", allow_duplicate=True),
+        Input("btn-add-farm-from-selector", "n_clicks"),
+        prevent_initial_call=True,
+    )
+    def add_farm_from_selector(n_clicks):
+        if n_clicks:
+            return False, True
+        raise PreventUpdate
+    
+    # ─────────────────────────────────────────────────────────────────────────
+    # 11. Add Farm modal visibility sync
+    # ─────────────────────────────────────────────────────────────────────────
+    @app.callback(
+        Output("add-farm-wrapper", "style"),
+        Input("add-farm-open", "data"),
+    )
+    def sync_add_farm_visibility(is_open):
+        if is_open:
+            return {"display": "block"}
+        return {"display": "none"}
+    
+    # ─────────────────────────────────────────────────────────────────────────
+    # 12. Add farm form validation
+    # ─────────────────────────────────────────────────────────────────────────
+    @app.callback(
+        Output("add-farm-name-error", "style"),
+        Output("add-farm-grower-error", "style"),
+        Output("add-farm-state-error", "style"),
+        Output("add-farm-county-error", "style"),
+        Output("btn-save-farm", "disabled"),
+        Output("btn-save-open-farm", "disabled"),
+        Input("add-farm-name", "value"),
+        Input("add-farm-grower", "value"),
+        Input("add-farm-state", "value"),
+        Input("add-farm-county", "value"),
+    )
+    def validate_add_farm(name, grower, state, county):
+        errors = {
+            "name": not name or len(name.strip()) == 0,
+            "grower": not grower or len(grower.strip()) == 0,
+            "state": not state or len(state.strip()) == 0,
+            "county": not county or len(county.strip()) == 0,
+        }
+        
+        any_error = any(errors.values())
+        
+        return (
+            {"display": "block"} if errors["name"] else {"display": "none"},
+            {"display": "block"} if errors["grower"] else {"display": "none"},
+            {"display": "block"} if errors["state"] else {"display": "none"},
+            {"display": "block"} if errors["county"] else {"display": "none"},
+            any_error,
+            any_error,
+        )
+    
+    # ─────────────────────────────────────────────────────────────────────────
+    # 13. Save farm (in-memory)
+    # ─────────────────────────────────────────────────────────────────────────
+    @app.callback(
+        Output("add-farm-open", "data", allow_duplicate=True),
+        Output("toast-message", "data", allow_duplicate=True),
+        Output("farm-selector-open", "data", allow_duplicate=True),
+        Input("btn-save-farm", "n_clicks"),
+        State("add-farm-name", "value"),
+        State("add-farm-grower", "value"),
+        State("add-farm-state", "value"),
+        State("add-farm-county", "value"),
+        State("add-farm-crop", "value"),
+        State("add-farm-year", "value"),
+        State("add-farm-notes", "value"),
+        prevent_initial_call=True,
+    )
+    def save_farm(n_clicks, name, grower, state, county, crop, year, notes):
+        if not n_clicks:
+            raise PreventUpdate
+        
+        farm_id = f"user-{name.lower().replace(' ', '-')[:20]}"
+        _user_farms[farm_id] = {
+            "id": farm_id,
+            "name": name,
+            "grower": grower,
+            "state": state,
+            "county": county,
+            "crop": crop,
+            "year": year,
+            "notes": notes or "",
+        }
+        
+        return False, f"Farm '{name}' saved successfully", dash.no_update
+    
+    # ─────────────────────────────────────────────────────────────────────────
+    # 14. Save and open farm
+    # ─────────────────────────────────────────────────────────────────────────
+    @app.callback(
+        Output("add-farm-open", "data", allow_duplicate=True),
+        Output("toast-message", "data", allow_duplicate=True),
+        Output("selected-farm-id", "data", allow_duplicate=True),
+        Output("selected-grower", "data", allow_duplicate=True),
+        Output("active-section", "data", allow_duplicate=True),
+        Input("btn-save-open-farm", "n_clicks"),
+        State("add-farm-name", "value"),
+        State("add-farm-grower", "value"),
+        State("add-farm-state", "value"),
+        State("add-farm-county", "value"),
+        State("add-farm-crop", "value"),
+        State("add-farm-year", "value"),
+        State("add-farm-notes", "value"),
+        prevent_initial_call=True,
+    )
+    def save_and_open_farm(n_clicks, name, grower, state, county, crop, year, notes):
+        if not n_clicks:
+            raise PreventUpdate
+        
+        farm_id = f"user-{name.lower().replace(' ', '-')[:20]}"
+        _user_farms[farm_id] = {
+            "id": farm_id,
+            "name": name,
+            "grower": grower,
+            "state": state,
+            "county": county,
+            "crop": crop,
+            "year": year,
+            "notes": notes or "",
+        }
+        
+        return (False, f"Farm '{name}' saved and opened",
+                farm_id, grower, "overview")
+    
+    # ─────────────────────────────────────────────────────────────────────────
+    # 15. Cancel / close add farm
+    # ─────────────────────────────────────────────────────────────────────────
+    @app.callback(
+        Output("add-farm-open", "data", allow_duplicate=True),
+        Output("onboarding-open", "data", allow_duplicate=True),
+        Input("btn-cancel-add-farm", "n_clicks"),
+        Input("btn-close-add-farm", "n_clicks"),
+        prevent_initial_call=True,
+    )
+    def close_add_farm(cancel_clicks, close_clicks):
+        if ctx.triggered:
+            return False, True
+        raise PreventUpdate
+    
+    # ─────────────────────────────────────────────────────────────────────────
+    # 16. Demo mode toggle (from header button + exit button)
     # ─────────────────────────────────────────────────────────────────────────
     @app.callback(
         Output("demo-badge", "style"),
@@ -165,7 +343,6 @@ def register_navigation_callbacks(app: dash.Dash) -> None:
         prevent_initial_call=True,
     )
     def toggle_demo_mode(btn_clicks, exit_clicks, demo_state):
-        """Toggle demo mode from header button or exit button."""
         if not ctx.triggered:
             raise PreventUpdate
         
@@ -179,7 +356,34 @@ def register_navigation_callbacks(app: dash.Dash) -> None:
         raise PreventUpdate
     
     # ─────────────────────────────────────────────────────────────────────────
-    # 7. Command palette toggle
+    # 17. Toast notification display
+    # ─────────────────────────────────────────────────────────────────────────
+    @app.callback(
+        Output("toast-overlay", "style"),
+        Output("toast-text", "children"),
+        Input("toast-message", "data"),
+    )
+    def display_toast(message):
+        if message:
+            return {"display": "flex"}, message
+        return {"display": "none"}, ""
+    
+    # ─────────────────────────────────────────────────────────────────────────
+    # 18. Dismiss toast
+    # ─────────────────────────────────────────────────────────────────────────
+    @app.callback(
+        Output("toast-message", "data", allow_duplicate=True),
+        Input("btn-dismiss-toast", "n_clicks"),
+        Input("toast-overlay", "n_clicks"),
+        prevent_initial_call=True,
+    )
+    def dismiss_toast(dismiss_clicks, overlay_clicks):
+        if ctx.triggered:
+            return ""
+        raise PreventUpdate
+    
+    # ─────────────────────────────────────────────────────────────────────────
+    # 19. Command palette toggle
     # ─────────────────────────────────────────────────────────────────────────
     @app.callback(
         Output("command-palette-overlay", "style"),
@@ -189,7 +393,6 @@ def register_navigation_callbacks(app: dash.Dash) -> None:
         prevent_initial_call=True,
     )
     def toggle_command_palette(search_clicks, input_submit, overlay_click):
-        """Toggle command palette visibility."""
         if not ctx.triggered:
             raise PreventUpdate
         
@@ -203,14 +406,13 @@ def register_navigation_callbacks(app: dash.Dash) -> None:
         raise PreventUpdate
     
     # ─────────────────────────────────────────────────────────────────────────
-    # 7b. Command palette filtering
+    # 20. Command palette filtering
     # ─────────────────────────────────────────────────────────────────────────
     @app.callback(
         Output("command-palette-list", "children"),
         Input("command-palette-input", "value"),
     )
     def filter_command_palette(query):
-        """Filter command palette items based on input."""
         query = (query or "").lower()
         
         filtered = []
@@ -240,7 +442,7 @@ def register_navigation_callbacks(app: dash.Dash) -> None:
         return filtered
     
     # ─────────────────────────────────────────────────────────────────────────
-    # 8. Command palette actions — execute commands
+    # 21. Command palette actions
     # ─────────────────────────────────────────────────────────────────────────
     @app.callback(
         Output("command-palette-overlay", "style", allow_duplicate=True),
@@ -254,7 +456,6 @@ def register_navigation_callbacks(app: dash.Dash) -> None:
         prevent_initial_call=True,
     )
     def handle_command_select(n_clicks_list):
-        """Handle command palette item selection — execute actual commands."""
         if not ctx.triggered:
             raise PreventUpdate
         
@@ -303,7 +504,7 @@ def register_navigation_callbacks(app: dash.Dash) -> None:
         return {"display": "none"}, no_update, no_update, no_update, no_update, no_update, no_update
     
     # ─────────────────────────────────────────────────────────────────────────
-    # 9. Nav rail collapse toggle
+    # 22. Nav rail collapse toggle
     # ─────────────────────────────────────────────────────────────────────────
     @app.callback(
         Output("nav-rail", "className"),

@@ -43,6 +43,9 @@ from components.soil_terrain import create_soil_terrain_page
 from components.farm_management import create_farm_management_page
 from components.reports import create_reports_page
 from components.settings import create_settings_page
+from components.farm_selector import create_farm_selector
+from components.add_farm import create_add_farm_modal
+from components.toast import create_toast
 
 # =============================================================================
 # Callbacks
@@ -84,6 +87,8 @@ onboarding_open_store = dcc.Store(id="onboarding-open", storage_type="session", 
 farm_selector_open_store = dcc.Store(id="farm-selector-open", storage_type="session", data=False)
 add_farm_open_store = dcc.Store(id="add-farm-open", storage_type="session", data=False)
 toast_store = dcc.Store(id="toast-message", storage_type="session")
+selected_farm_id_store = dcc.Store(id="selected-farm-id", storage_type="session")
+selected_grower_store = dcc.Store(id="selected-grower", storage_type="session")
 
 # =============================================================================
 # Download Components
@@ -205,6 +210,8 @@ app.layout = html.Div(
         farm_selector_open_store,
         add_farm_open_store,
         toast_store,
+        selected_farm_id_store,
+        selected_grower_store,
         
         # Downloads
         download_weather,
@@ -213,6 +220,15 @@ app.layout = html.Div(
         
         # Onboarding (hidden by default)
         create_onboarding(),
+        
+        # Farm Selector Modal
+        create_farm_selector(),
+        
+        # Add Farm Modal
+        create_add_farm_modal(),
+        
+        # Toast Notification
+        create_toast(),
         
         # Command Palette (hidden by default)
         create_command_palette(),
