@@ -265,4 +265,4 @@ Apache-2.0
 - **Pull Request**: https://github.com/S-G1/green-ag-intelligence/pulls
   (Latest: `release/v2.2-dashboard-first` → `main`)
 - **Hosted Dashboard**: Deploy via Render blueprint (`render.yaml`) — see Quick Start above
-- **Live Demo URL**: https://green-ag-intelligence.onrender.com (after deployment)
+- **Live Demo URL**: https://green-ag-intelligence-1.onrender.com (after deployment)
