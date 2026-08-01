@@ -1,8 +1,8 @@
-"""Navigation callbacks — Page routing, onboarding, farm selector, add farm, demo mode, command palette, toast."""
+"""Navigation callbacks — Page routing, farm selector, add farm, demo mode, command palette, toast."""
 
 from __future__ import annotations
 
-from dash import Input, Output, State, html, ALL, ctx
+from dash import Input, Output, State, html, ALL, ctx, dcc
 from dash.exceptions import PreventUpdate
 import dash
 
@@ -59,30 +59,19 @@ def register_navigation_callbacks(app: dash.Dash) -> None:
         return [page] + classes
     
     # ─────────────────────────────────────────────────────────────────────────
-    # 3. Back to overview button
+    # 3. Empty-state banner visibility
     # ─────────────────────────────────────────────────────────────────────────
     @app.callback(
-        Output("active-section", "data", allow_duplicate=True),
-        Input("btn-back-overview", "n_clicks"),
-        prevent_initial_call=True,
+        Output("empty-state-banner", "style"),
+        Input("selected-farm-id", "data"),
     )
-    def back_to_overview(n_clicks):
-        if n_clicks:
-            return "overview"
-        raise PreventUpdate
+    def sync_empty_state_banner(farm_id):
+        if farm_id:
+            return {"display": "none"}
+        return {"display": "flex"}
     
     # ─────────────────────────────────────────────────────────────────────────
-    # 4. Onboarding overlay visibility — synced from canonical store
-    # ─────────────────────────────────────────────────────────────────────────
-    @app.callback(
-        Output("onboarding-overlay", "is_open"),
-        Input("onboarding-open", "data"),
-    )
-    def sync_onboarding_visibility(is_open):
-        return bool(is_open)
-    
-    # ─────────────────────────────────────────────────────────────────────────
-    # 4b. Farm selector backdrop visibility
+    # 5. Farm selector backdrop visibility
     # ─────────────────────────────────────────────────────────────────────────
     @app.callback(
         Output("farm-selector-backdrop", "style"),
@@ -94,7 +83,7 @@ def register_navigation_callbacks(app: dash.Dash) -> None:
         return {"display": "none"}
     
     # ─────────────────────────────────────────────────────────────────────────
-    # 4c. Add farm backdrop visibility
+    # 6. Add farm backdrop visibility
     # ─────────────────────────────────────────────────────────────────────────
     @app.callback(
         Output("add-farm-backdrop", "style"),
@@ -106,43 +95,53 @@ def register_navigation_callbacks(app: dash.Dash) -> None:
         return {"display": "none"}
     
     # ─────────────────────────────────────────────────────────────────────────
-    # 5. Centralized onboarding action handler — ALL THREE BUTTONS
+    # 7. Dashboard primary action buttons
     # ─────────────────────────────────────────────────────────────────────────
     @app.callback(
-        Output("onboarding-open", "data"),
-        Output("farm-selector-open", "data"),
-        Output("add-farm-open", "data"),
-        Output("demo-store", "data"),
+        Output("farm-selector-open", "data", allow_duplicate=True),
+        Output("add-farm-open", "data", allow_duplicate=True),
+        Output("demo-store", "data", allow_duplicate=True),
         Output("ndvi-interval", "disabled", allow_duplicate=True),
         Output("btn-ndvi-play", "className", allow_duplicate=True),
         Output("demo-badge", "style", allow_duplicate=True),
-        Output("toast-message", "data"),
+        Output("toast-message", "data", allow_duplicate=True),
         Output("active-section", "data", allow_duplicate=True),
-        Input("onboarding-open-farm", "n_clicks"),
-        Input("onboarding-add-farm", "n_clicks"),
-        Input("onboarding-demo", "n_clicks"),
+        Output("selected-farm-id", "data", allow_duplicate=True),
+        Output("selected-grower", "data", allow_duplicate=True),
+        Output("filter-crop", "value", allow_duplicate=True),
+        Output("filter-year", "value", allow_duplicate=True),
+        Output("filter-layer", "value", allow_duplicate=True),
+        Output("active-map-layer", "data", allow_duplicate=True),
+        Input("btn-open-existing-farm", "n_clicks"),
+        Input("btn-add-new-farm", "n_clicks"),
+        Input("btn-launch-demo-mode", "n_clicks"),
         prevent_initial_call=True,
     )
-    def handle_onboarding_actions(open_clicks, add_clicks, demo_clicks):
+    def handle_dashboard_actions(open_clicks, add_clicks, demo_clicks):
         triggered = ctx.triggered_id
+        no_update = dash.no_update
         
-        if triggered == "onboarding-open-farm":
-            return (False, True, False, dash.no_update, dash.no_update,
-                    dash.no_update, dash.no_update, dash.no_update, "overview")
+        if triggered == "btn-open-existing-farm" and open_clicks:
+            return (True, False, no_update, no_update, no_update, no_update,
+                    no_update, no_update, no_update, no_update, no_update,
+                    no_update, no_update, no_update)
         
-        elif triggered == "onboarding-add-farm":
-            return (False, False, True, dash.no_update, dash.no_update,
-                    dash.no_update, dash.no_update, dash.no_update, "overview")
+        elif triggered == "btn-add-new-farm" and add_clicks:
+            return (False, True, no_update, no_update, no_update, no_update,
+                    no_update, no_update, no_update, no_update, no_update,
+                    no_update, no_update, no_update)
         
-        elif triggered == "onboarding-demo":
-            return (False, False, False, True, False,
-                    "ga-ndvi-play-btn playing", {"display": "flex"},
-                    "Demo Mode launched using Maryland Final Project Farm", "overview")
+        elif triggered == "btn-launch-demo-mode" and demo_clicks:
+            return (False, False, True, False, "ga-ndvi-play-btn playing",
+                    {"display": "flex"},
+                    "Demo Mode launched using Maryland Final Project Farm",
+                    "overview", "md-caroline-farm", "md-grower",
+                    "Soybeans", 2025, "risk", "risk")
         
         raise PreventUpdate
     
     # ─────────────────────────────────────────────────────────────────────────
-    # 6. Farm Selector visibility sync
+    # 8. Farm Selector visibility sync
     # ─────────────────────────────────────────────────────────────────────────
     @app.callback(
         Output("farm-selector-wrapper", "style"),
@@ -154,11 +153,11 @@ def register_navigation_callbacks(app: dash.Dash) -> None:
         return {"display": "none"}
     
     # ─────────────────────────────────────────────────────────────────────────
-    # 7. Farm selection — click a farm item
+    # 9. Farm selection — click a farm item
     # ─────────────────────────────────────────────────────────────────────────
     @app.callback(
-        Output("selected-farm-id", "data"),
-        Output("selected-grower", "data"),
+        Output("selected-farm-id", "data", allow_duplicate=True),
+        Output("selected-grower", "data", allow_duplicate=True),
         Output("btn-open-selected-farm", "disabled"),
         Output("farm-check-md-caroline-farm", "style"),
         Input("farm-item-md-caroline-farm", "n_clicks"),
@@ -170,7 +169,7 @@ def register_navigation_callbacks(app: dash.Dash) -> None:
         raise PreventUpdate
     
     # ─────────────────────────────────────────────────────────────────────────
-    # 8. Open selected farm from farm selector
+    # 10. Open selected farm from farm selector
     # ─────────────────────────────────────────────────────────────────────────
     @app.callback(
         Output("farm-selector-open", "data", allow_duplicate=True),
@@ -189,26 +188,21 @@ def register_navigation_callbacks(app: dash.Dash) -> None:
         raise PreventUpdate
     
     # ─────────────────────────────────────────────────────────────────────────
-    # 9. Cancel / close farm selector
+    # 11. Cancel / close farm selector
     # ─────────────────────────────────────────────────────────────────────────
     @app.callback(
         Output("farm-selector-open", "data", allow_duplicate=True),
-        Output("onboarding-open", "data", allow_duplicate=True),
         Input("btn-cancel-farm-selector", "n_clicks"),
         Input("btn-close-farm-selector", "n_clicks"),
-        State("selected-farm-id", "data"),
         prevent_initial_call=True,
     )
-    def close_farm_selector(cancel_clicks, close_clicks, selected_farm_id):
-        """Close farm selector. Only reopen onboarding if no farm was selected."""
+    def close_farm_selector(cancel_clicks, close_clicks):
         if ctx.triggered:
-            # Only reopen onboarding if no farm is currently selected
-            should_show_onboarding = selected_farm_id is None
-            return False, should_show_onboarding
+            return False
         raise PreventUpdate
     
     # ─────────────────────────────────────────────────────────────────────────
-    # 10. Add New Farm from farm selector
+    # 12. Add New Farm from farm selector
     # ─────────────────────────────────────────────────────────────────────────
     @app.callback(
         Output("farm-selector-open", "data", allow_duplicate=True),
@@ -222,7 +216,7 @@ def register_navigation_callbacks(app: dash.Dash) -> None:
         raise PreventUpdate
     
     # ─────────────────────────────────────────────────────────────────────────
-    # 11. Add Farm modal visibility sync
+    # 13. Add Farm modal visibility sync
     # ─────────────────────────────────────────────────────────────────────────
     @app.callback(
         Output("add-farm-wrapper", "style"),
@@ -234,7 +228,7 @@ def register_navigation_callbacks(app: dash.Dash) -> None:
         return {"display": "none"}
     
     # ─────────────────────────────────────────────────────────────────────────
-    # 12. Add farm form validation
+    # 14. Add farm form validation
     # ─────────────────────────────────────────────────────────────────────────
     @app.callback(
         Output("add-farm-name-error", "style"),
@@ -268,12 +262,11 @@ def register_navigation_callbacks(app: dash.Dash) -> None:
         )
     
     # ─────────────────────────────────────────────────────────────────────────
-    # 13. Save farm (in-memory)
+    # 15. Save farm (in-memory)
     # ─────────────────────────────────────────────────────────────────────────
     @app.callback(
         Output("add-farm-open", "data", allow_duplicate=True),
         Output("toast-message", "data", allow_duplicate=True),
-        Output("farm-selector-open", "data", allow_duplicate=True),
         Input("btn-save-farm", "n_clicks"),
         State("add-farm-name", "value"),
         State("add-farm-grower", "value"),
@@ -300,10 +293,10 @@ def register_navigation_callbacks(app: dash.Dash) -> None:
             "notes": notes or "",
         }
         
-        return False, f"Farm '{name}' saved successfully", dash.no_update
+        return False, f"Farm '{name}' saved successfully"
     
     # ─────────────────────────────────────────────────────────────────────────
-    # 14. Save and open farm
+    # 16. Save and open farm
     # ─────────────────────────────────────────────────────────────────────────
     @app.callback(
         Output("add-farm-open", "data", allow_duplicate=True),
@@ -341,51 +334,146 @@ def register_navigation_callbacks(app: dash.Dash) -> None:
                 farm_id, grower, "overview")
     
     # ─────────────────────────────────────────────────────────────────────────
-    # 15. Cancel / close add farm
+    # 17. Cancel / close add farm
     # ─────────────────────────────────────────────────────────────────────────
     @app.callback(
         Output("add-farm-open", "data", allow_duplicate=True),
-        Output("onboarding-open", "data", allow_duplicate=True),
         Input("btn-cancel-add-farm", "n_clicks"),
         Input("btn-close-add-farm", "n_clicks"),
-        State("selected-farm-id", "data"),
         prevent_initial_call=True,
     )
-    def close_add_farm(cancel_clicks, close_clicks, selected_farm_id):
-        """Close add-farm modal. Only reopen onboarding if no farm was selected."""
+    def close_add_farm(cancel_clicks, close_clicks):
         if ctx.triggered:
-            should_show_onboarding = selected_farm_id is None
-            return False, should_show_onboarding
+            return False
         raise PreventUpdate
     
     # ─────────────────────────────────────────────────────────────────────────
-    # 16. Demo mode toggle (from header button + exit button)
+    # 18. Add farm file upload validation
+    # ─────────────────────────────────────────────────────────────────────────
+
+    @app.callback(
+        Output("add-farm-geojson-status", "children"),
+        Output("add-farm-file-error", "children"),
+        Output("add-farm-file-error", "style"),
+        Input("add-farm-upload-geojson", "contents"),
+        State("add-farm-upload-geojson", "filename"),
+        prevent_initial_call=True,
+    )
+    def validate_geojson_upload(contents, filename):
+        if not contents:
+            raise PreventUpdate
+        import base64, json, io
+        try:
+            content_type, content_string = contents.split(",")
+            decoded = base64.b64decode(content_string)
+            data = json.loads(decoded)
+            geom_type = data.get("type", "")
+            if geom_type not in ("FeatureCollection", "Feature"):
+                return (
+                    f"❌ {filename}: must be FeatureCollection or Feature",
+                    "Invalid GeoJSON type",
+                    {"display": "block"},
+                )
+            features = data.get("features", [data]) if geom_type == "FeatureCollection" else [data]
+            if not features:
+                return (
+                    f"❌ {filename}: no features found",
+                    "Empty geometry",
+                    {"display": "block"},
+                )
+            for f in features:
+                g = f.get("geometry", {})
+                if g.get("type") not in ("Polygon", "MultiPolygon"):
+                    return (
+                        f"❌ {filename}: features must be Polygon or MultiPolygon",
+                        "Invalid geometry type",
+                        {"display": "block"},
+                    )
+            file_size = len(decoded)
+            if file_size > 5 * 1024 * 1024:
+                return (
+                    f"❌ {filename}: exceeds 5 MB limit",
+                    "File too large",
+                    {"display": "block"},
+                )
+            return (
+                f"✓ {filename} — {len(features)} feature(s), {file_size/1024:.1f} KB",
+                "",
+                {"display": "none"},
+            )
+        except Exception as e:
+            return (
+                f"❌ {filename}: parse error",
+                str(e),
+                {"display": "block"},
+            )
+
+    @app.callback(
+        Output("add-farm-shapefile-status", "children"),
+        Output("add-farm-file-error", "children", allow_duplicate=True),
+        Output("add-farm-file-error", "style", allow_duplicate=True),
+        Input("add-farm-upload-shapefile", "contents"),
+        State("add-farm-upload-shapefile", "filename"),
+        prevent_initial_call=True,
+    )
+    def validate_shapefile_upload(contents, filename):
+        if not contents:
+            raise PreventUpdate
+        import base64, zipfile, io
+        try:
+            content_type, content_string = contents.split(",")
+            decoded = base64.b64decode(content_string)
+            file_size = len(decoded)
+            if file_size > 10 * 1024 * 1024:
+                return (
+                    f"❌ {filename}: exceeds 10 MB limit",
+                    "File too large",
+                    {"display": "block"},
+                )
+            if not filename.lower().endswith(".zip"):
+                return (
+                    f"❌ {filename}: must be a .zip archive",
+                    "Invalid file type",
+                    {"display": "block"},
+                )
+            with zipfile.ZipFile(io.BytesIO(decoded)) as z:
+                names = z.namelist()
+                if not any(n.lower().endswith(".shp") for n in names):
+                    return (
+                        f"❌ {filename}: no .shp file inside archive",
+                        "Missing shapefile",
+                        {"display": "block"},
+                    )
+            return (
+                f"✓ {filename} — archive valid, {file_size/1024:.1f} KB",
+                "",
+                {"display": "none"},
+            )
+        except Exception as e:
+            return (
+                f"❌ {filename}: parse error",
+                str(e),
+                {"display": "block"},
+            )
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # 19. Demo mode exit button
     # ─────────────────────────────────────────────────────────────────────────
     @app.callback(
         Output("demo-badge", "style"),
         Output("demo-store", "data", allow_duplicate=True),
         Output("ndvi-interval", "disabled", allow_duplicate=True),
         Output("btn-ndvi-play", "className", allow_duplicate=True),
-        Input("btn-demo-mode", "n_clicks"),
         Input("btn-exit-demo", "n_clicks"),
-        State("demo-store", "data"),
         prevent_initial_call=True,
     )
-    def toggle_demo_mode(btn_clicks, exit_clicks, demo_state):
-        if not ctx.triggered:
-            raise PreventUpdate
-        
-        triggered = ctx.triggered[0]["prop_id"].split(".")[0]
-        
-        if triggered == "btn-demo-mode":
-            return {"display": "flex"}, True, False, "ga-ndvi-play-btn playing"
-        elif triggered == "btn-exit-demo":
+    def exit_demo_mode(n_clicks):
+        if n_clicks:
             return {"display": "none"}, False, True, "ga-ndvi-play-btn"
-        
         raise PreventUpdate
     
     # ─────────────────────────────────────────────────────────────────────────
-    # 17. Toast notification display
+    # 19. Toast notification display
     # ─────────────────────────────────────────────────────────────────────────
     @app.callback(
         Output("toast-overlay", "style"),
@@ -398,7 +486,7 @@ def register_navigation_callbacks(app: dash.Dash) -> None:
         return {"display": "none"}, ""
     
     # ─────────────────────────────────────────────────────────────────────────
-    # 18. Dismiss toast
+    # 20. Dismiss toast
     # ─────────────────────────────────────────────────────────────────────────
     @app.callback(
         Output("toast-message", "data", allow_duplicate=True),
@@ -412,7 +500,7 @@ def register_navigation_callbacks(app: dash.Dash) -> None:
         raise PreventUpdate
     
     # ─────────────────────────────────────────────────────────────────────────
-    # 19. Command palette toggle
+    # 21. Command palette toggle
     # ─────────────────────────────────────────────────────────────────────────
     @app.callback(
         Output("command-palette-overlay", "style"),
@@ -427,7 +515,7 @@ def register_navigation_callbacks(app: dash.Dash) -> None:
         
         triggered = ctx.triggered[0]["prop_id"].split(".")[0]
         
-        if triggered == "global-search":
+        if triggered == "global-search" and search_clicks:
             return {"display": "flex"}
         elif triggered in ["command-palette-input", "command-palette-overlay"]:
             return {"display": "none"}
@@ -435,7 +523,7 @@ def register_navigation_callbacks(app: dash.Dash) -> None:
         raise PreventUpdate
     
     # ─────────────────────────────────────────────────────────────────────────
-    # 20. Command palette filtering
+    # 22. Command palette filtering
     # ─────────────────────────────────────────────────────────────────────────
     @app.callback(
         Output("command-palette-list", "children"),
@@ -471,7 +559,7 @@ def register_navigation_callbacks(app: dash.Dash) -> None:
         return filtered
     
     # ─────────────────────────────────────────────────────────────────────────
-    # 21. Command palette actions
+    # 23. Command palette actions
     # ─────────────────────────────────────────────────────────────────────────
     @app.callback(
         Output("command-palette-overlay", "style", allow_duplicate=True),
@@ -519,7 +607,7 @@ def register_navigation_callbacks(app: dash.Dash) -> None:
             import pandas as pd
             from data import WEATHER_MONTHLY
             df = pd.DataFrame(WEATHER_MONTHLY)
-            return {"display": "none"}, no_update, no_update, no_update, no_update, no_update, dash.dcc.send_data_frame(df.to_csv, "weather_export.csv", index=False)
+            return {"display": "none"}, no_update, no_update, no_update, no_update, no_update, dcc.send_data_frame(df.to_csv, "weather_export.csv", index=False)
         
         elif item_id == "refresh":
             return {"display": "none"}, no_update, no_update, no_update, no_update, no_update, no_update
@@ -533,7 +621,7 @@ def register_navigation_callbacks(app: dash.Dash) -> None:
         return {"display": "none"}, no_update, no_update, no_update, no_update, no_update, no_update
     
     # ─────────────────────────────────────────────────────────────────────────
-    # 22. Nav rail collapse toggle
+    # 24. Nav rail collapse toggle
     # ─────────────────────────────────────────────────────────────────────────
     @app.callback(
         Output("nav-rail", "className"),

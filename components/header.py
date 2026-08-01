@@ -58,11 +58,25 @@ def create_header(is_demo: bool = False) -> html.Header:
             # Actions
             html.Div(
                 [
-                    # Demo badge
+                    # Demo badge with exit button
                     html.Div(
                         [
                             html.Span(className="pulse"),
                             html.Span("Demo Mode"),
+                            html.Button(
+                                "✕",
+                                id="btn-exit-demo",
+                                className="ms-2",
+                                style={
+                                    "background": "transparent",
+                                    "border": "none",
+                                    "color": "inherit",
+                                    "cursor": "pointer",
+                                    "fontSize": "0.75rem",
+                                    "padding": "0 2px",
+                                },
+                                title="Exit Demo Mode",
+                            ),
                         ],
                         className="ga-demo-badge me-2",
                         id="demo-badge",

@@ -1,4 +1,4 @@
-"""Field Table component — Enhanced with pagination, Excel export, sticky header."""
+"""Field Table component — Enhanced with pagination, search, clear, count, no-results."""
 
 from __future__ import annotations
 
@@ -8,13 +8,12 @@ import dash_bootstrap_components as dbc
 from data import FIELDS
 
 
-def create_field_table(search: str = "", page: int = 0, page_size: int = 5) -> html.Div:
+def create_field_table(search: str = "", page: int = 0, page_size: int = 5, clear_visible: bool = False, result_count: str = "") -> html.Div:
     """Build the enhanced field comparison table."""
     all_fields = _filter_fields(search)
     total_pages = max(1, (len(all_fields) + page_size - 1) // page_size)
     page = min(page, total_pages - 1)
     
-    # Paginate
     start = page * page_size
     end = start + page_size
     fields_page = all_fields[start:end]
@@ -43,6 +42,25 @@ def create_field_table(search: str = "", page: int = 0, page_size: int = 5) -> h
                 ],
                 id={"type": "field-row", "index": f["id"]},
                 className="field-row",
+            )
+        )
+    
+    # No-results state
+    if not rows:
+        rows.append(
+            html.Tr(
+                [
+                    html.Td(
+                        html.Div(
+                            [
+                                html.Div("🔍", className="fs-4 mb-2 text-muted"),
+                                html.Div("No fields match your search", className="text-muted"),
+                            ],
+                            className="text-center py-4",
+                        ),
+                        colSpan=10,
+                    ),
+                ]
             )
         )
     
@@ -94,10 +112,27 @@ def create_field_table(search: str = "", page: int = 0, page_size: int = 5) -> h
                 className="ga-card-header",
             ),
             
-            dbc.Input(
-                id="table-search",
-                placeholder="Search fields...",
-                className="mb-3",
+            html.Div(
+                [
+                    dbc.Input(
+                        id="table-search",
+                        placeholder="Search fields...",
+                        className="mb-2",
+                        value=search,
+                    ),
+                    html.Div(
+                        [
+                            html.Span(result_count or f"{len(all_fields)} fields", className="text-muted small me-2", id="table-result-count"),
+                            html.Button(
+                                "Clear",
+                                id="table-search-clear",
+                                className="ga-card-btn",
+                                style={"display": "inline-block" if clear_visible else "none"},
+                            ),
+                        ],
+                        className="d-flex align-items-center mb-2",
+                    ),
+                ]
             ),
             
             html.Div(
@@ -132,17 +167,33 @@ def create_field_table(search: str = "", page: int = 0, page_size: int = 5) -> h
 
 
 def _filter_fields(search: str) -> list[dict]:
-    """Filter fields by search term."""
+    """Filter fields by search term across all relevant columns."""
     if not search:
         return FIELDS
     
-    search_lower = search.lower()
-    return [
-        f for f in FIELDS
-        if search_lower in f["name"].lower()
-        or search_lower in f["soil_type"].lower()
-        or search_lower in f["crop_2025"].lower()
-    ]
+    search_lower = search.lower().strip()
+    results = []
+    
+    for f in FIELDS:
+        rec = _get_recommendation_text(f).lower()
+        risk = _get_risk_label(f["stress_index"]).lower()
+        priority = _get_priority(f["stress_index"]).lower()
+        
+        match = (
+            search_lower in f["name"].lower()
+            or search_lower in f["id"].lower()
+            or search_lower in f["soil_type"].lower()
+            or search_lower in f["crop_2025"].lower()
+            or search_lower in rec
+            or search_lower in risk
+            or search_lower in priority
+            or search_lower in str(f["stress_index"]).lower()
+            or search_lower in str(f["area_acres"]).lower()
+        )
+        if match:
+            results.append(f)
+    
+    return results
 
 
 def _get_risk_badge_class(stress: int) -> str:
@@ -172,7 +223,7 @@ def _get_priority(stress: int) -> str:
     elif stress < 35:
         return "Medium"
     else:
-        return "🔴 High"
+        return "High"
 
 
 def _get_recommendation_text(f: dict) -> str:

@@ -1,4 +1,4 @@
-"""Green Ag Intelligence Platform — Version 2.1 with Navigation Rail.
+"""Green Ag Intelligence Platform — Version 2.2 Dashboard-First.
 
 Enterprise Agricultural Intelligence Platform with left navigation.
 
@@ -8,9 +8,12 @@ Local: python app.py
 
 from __future__ import annotations
 
+import os
+
 import dash
 import dash_bootstrap_components as dbc
 from dash import dcc, html, Input, Output
+from flask import request, send_from_directory
 
 # =============================================================================
 # Configuration
@@ -34,7 +37,6 @@ from components.field_table import create_field_table
 from components.gauge import create_gauge
 from components.recommendations import create_recommendations
 from components.command_palette import create_command_palette
-from components.onboarding import create_onboarding
 from components.footer import create_footer
 from components.map_explorer import create_map_explorer_page
 from components.crop_health import create_crop_health_page
@@ -76,7 +78,36 @@ app = dash.Dash(
 server = app.server
 
 # =============================================================================
-# Hidden Stores
+# Report Serving Route
+# =============================================================================
+
+RUNTIME_ROOT = os.environ.get(
+    "MY_FARM_ADVISOR_RUNTIME",
+    os.path.expanduser("~/my-farm-advisor-runtime/data-pipeline"),
+)
+
+
+@server.route("/reports/<path:filename>")
+def serve_report(filename: str):
+    """Serve farm reports from the runtime directory."""
+    safe_name = os.path.basename(filename)
+    report_dir = os.path.join(
+        RUNTIME_ROOT,
+        "growers",
+        "md-grower",
+        "farms",
+        "md-caroline-farm",
+        "derived",
+        "reports",
+    )
+    full_path = os.path.join(report_dir, safe_name)
+    if os.path.exists(full_path) and os.path.isfile(full_path):
+        return send_from_directory(report_dir, safe_name)
+    return f"Report not found: {safe_name}", 404
+
+
+# =============================================================================
+# Hidden Stores — Canonical Application State
 # =============================================================================
 
 theme_store = dcc.Store(id="theme-store", storage_type="local", data="light")
@@ -84,12 +115,13 @@ demo_store = dcc.Store(id="demo-store", storage_type="session", data=False)
 selected_field_store = dcc.Store(id="selected-field-store", storage_type="session")
 active_section_store = dcc.Store(id="active-section", storage_type="session", data="overview")
 nav_collapsed_store = dcc.Store(id="nav-collapsed", storage_type="local", data=False)
-onboarding_open_store = dcc.Store(id="onboarding-open", storage_type="session", data=True)
 farm_selector_open_store = dcc.Store(id="farm-selector-open", storage_type="session", data=False)
 add_farm_open_store = dcc.Store(id="add-farm-open", storage_type="session", data=False)
 toast_store = dcc.Store(id="toast-message", storage_type="session")
 selected_farm_id_store = dcc.Store(id="selected-farm-id", storage_type="session")
 selected_grower_store = dcc.Store(id="selected-grower", storage_type="session")
+active_map_layer_store = dcc.Store(id="active-map-layer", storage_type="session", data="risk")
+active_weather_metric_store = dcc.Store(id="active-weather-metric", storage_type="session", data="combined")
 
 # =============================================================================
 # Download Components
@@ -98,19 +130,21 @@ selected_grower_store = dcc.Store(id="selected-grower", storage_type="session")
 download_weather = dcc.Download(id="download-weather")
 download_fields = dcc.Download(id="download-fields")
 download_ndvi = dcc.Download(id="download-ndvi")
+download_excel = dcc.Download(id="download-excel")
 
 # =============================================================================
 # Overview Page Layout
 # =============================================================================
 
 def create_overview_page() -> html.Div:
-    """Build the Overview page (formerly Dashboard)."""
+    """Build the Overview page (Dashboard-first)."""
     return html.Div(
         [
-            # KPI Cards
+            # KPI Cards (always rendered; update via callbacks)
             html.Div(
                 create_kpi_cards(),
                 className="ga-container",
+                id="kpi-section",
             ),
             
             # Main Content Grid
@@ -207,20 +241,36 @@ app.layout = html.Div(
         selected_field_store,
         active_section_store,
         nav_collapsed_store,
-        onboarding_open_store,
         farm_selector_open_store,
         add_farm_open_store,
         toast_store,
         selected_farm_id_store,
         selected_grower_store,
+        active_map_layer_store,
+        active_weather_metric_store,
         
         # Downloads
         download_weather,
         download_fields,
         download_ndvi,
+        download_excel,
         
-        # Onboarding (hidden by default)
-        create_onboarding(),
+        # Empty-state banner (hidden when farm is selected)
+        html.Div(
+            [
+                html.Div(
+                    [
+                        html.Span("ℹ️", className="me-2"),
+                        html.Strong("No farm selected. "),
+                        html.Span("Select an existing farm, add a farm, or launch the Maryland demo."),
+                    ],
+                    className="ga-empty-state-inner",
+                ),
+            ],
+            id="empty-state-banner",
+            className="ga-empty-state-banner",
+            style={"display": "flex"},
+        ),
         
         # Farm Selector Modal
         create_farm_selector(),
@@ -252,7 +302,7 @@ app.layout = html.Div(
                         # Global Search
                         create_global_search(),
                         
-                        # Filter Toolbar
+                        # Filter Toolbar (includes primary actions)
                         create_filter_toolbar(),
                         
                         # Page Content (switches based on active section)
@@ -333,5 +383,17 @@ if __name__ == "__main__":
     debug = os.environ.get("DASH_DEBUG", "0") == "1"
     port = int(os.environ.get("PORT", "8050"))
     host = os.environ.get("HOST", "0.0.0.0")
+    
+    # Log update-component request bodies for debugging
+    @server.before_request
+    def log_update_component():
+        if request.path == '/_dash-update-component' and request.method == 'POST':
+            try:
+                body = request.get_data(as_text=True)
+                import json, sys
+                data = json.loads(body)
+                print(f"UPDATE-COMPONENT: output={data.get('output', 'unknown')[:80]}, inputs={data.get('inputs', [])}", file=sys.stderr)
+            except Exception as e:
+                print(f"UPDATE-COMPONENT: error reading body: {e}", file=sys.stderr)
     
     app.run(debug=debug, host=host, port=port)

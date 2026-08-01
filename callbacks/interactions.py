@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dash import Input, Output, State, html
+from dash import Input, Output, State, html, ctx
 from dash.exceptions import PreventUpdate
 import dash
 
@@ -17,71 +17,6 @@ from components.recommendations import create_recommendations
 def register_interaction_callbacks(app: dash.Dash) -> None:
     """Register all connected interaction callbacks."""
     
-    # ─────────────────────────────────────────────────────────────────────────
-    # Canonical selected field store → update all linked components
-    # ─────────────────────────────────────────────────────────────────────────
-    @app.callback(
-        Output("map-graph", "figure", allow_duplicate=True),
-        Output("ndvi-chart", "figure", allow_duplicate=True),
-        Output("stress-gauge", "figure", allow_duplicate=True),
-        Output("selected-field-store", "data"),
-        Input({"type": "search-result", "index": dash.ALL}, "n_clicks"),
-        Input({"type": "rec-view", "index": dash.ALL}, "n_clicks"),
-        prevent_initial_call=True,
-    )
-    def update_on_field_select(search_clicks, rec_clicks):
-        """Update all components when a field is selected from search or recommendations."""
-        if not ctx.triggered:
-            raise PreventUpdate
-        
-        triggered = ctx.triggered[0]["prop_id"]
-        
-        # Extract field ID from pattern-matching ID
-        import json
-        try:
-            id_json = triggered.split(".")[0]
-            field_id = json.loads(id_json)["index"]
-        except Exception:
-            raise PreventUpdate
-        
-        # Build updated figures
-        from components.map_component import _build_map_figure
-        from components.ndvi_panel import _build_ndvi_bar_chart
-        from components.gauge import create_gauge
-        
-        map_fig = _build_map_figure(field_id, "ndvi")
-        ndvi_fig = _build_ndvi_bar_chart(field_id, 6, "value")
-        gauge_component = create_gauge(field_id)
-        
-        # Extract gauge figure
-        gauge_fig = None
-        for child in gauge_component.children:
-            if hasattr(child, "figure"):
-                gauge_fig = child.figure
-                break
-        
-        if gauge_fig is None:
-            raise PreventUpdate
-        
-        return map_fig, ndvi_fig, gauge_fig, field_id
-    
-    # ─────────────────────────────────────────────────────────────────────────
-    # Filter layer dropdown → rebuild map figure directly
-    # ─────────────────────────────────────────────────────────────────────────
-    @app.callback(
-        Output("map-graph", "figure", allow_duplicate=True),
-        Input("filter-layer", "value"),
-        State("selected-field-store", "data"),
-        prevent_initial_call=True,
-    )
-    def update_map_layer(layer, selected_field):
-        """Update map when layer changes."""
-        if layer is None:
-            raise PreventUpdate
-        
-        from components.map_component import _build_map_figure
-        return _build_map_figure(selected_field, layer)
-    
     @app.callback(
         Output("ndvi-chart", "figure", allow_duplicate=True),
         Output("ndvi-slider", "value", allow_duplicate=True),
@@ -93,7 +28,6 @@ def register_interaction_callbacks(app: dash.Dash) -> None:
     )
     def update_ndvi(month, n_intervals, interval_disabled, play_btn_class):
         """Update NDVI chart based on slider or animation."""
-        ctx = dash.callback_context
         if not ctx.triggered:
             raise PreventUpdate
         
@@ -102,12 +36,11 @@ def register_interaction_callbacks(app: dash.Dash) -> None:
         if triggered_id == "ndvi-interval" and not interval_disabled:
             month = (n_intervals % 12)
         elif triggered_id == "ndvi-slider":
-            pass  # Use the slider value
+            pass
         else:
             raise PreventUpdate
         
         ndvi_panel = create_ndvi_panel(month=month)
-        # Extract figure
         for child in ndvi_panel.children:
             if hasattr(child, 'figure'):
                 return child.figure, month
@@ -141,12 +74,27 @@ def register_interaction_callbacks(app: dash.Dash) -> None:
     )
     def update_table_search(search_value):
         """Update table based on search across all visible columns."""
-        table = create_field_table(search=search_value or "")
-        # Return the full table component (it has id="field-table" on outer div)
-        # but we only need to update children since Output targets children
+        from components.field_table import _filter_fields
+        
+        matches = _filter_fields(search_value or "")
+        count_text = f"{len(matches)} result{'s' if len(matches) != 1 else ''}"
+        clear_visible = bool(search_value)
+        
+        import sys
+        print(f"DEBUG: update_table_search called with search_value={search_value!r}, clear_visible={clear_visible}", file=sys.stderr)
+        
+        table = create_field_table(search=search_value or "", page=0, page_size=5, clear_visible=clear_visible, result_count=count_text)
         return table.children
     
-
+    @app.callback(
+        Output("table-search", "value"),
+        Input("table-search-clear", "n_clicks"),
+        prevent_initial_call=True,
+    )
+    def clear_table_search(n_clicks):
+        if n_clicks:
+            return ""
+        raise PreventUpdate
     
     # ─────────────────────────────────────────────────────────────────────────
     # Global Search — filter fields and show dropdown
@@ -163,14 +111,16 @@ def register_interaction_callbacks(app: dash.Dash) -> None:
         if not query or len(query) < 2:
             return [], {"display": "none"}
         
-        query_lower = query.lower()
+        query_lower = query.lower().strip()
         matches = []
         
         for f in FIELDS:
             match = (
                 query_lower in f["name"].lower()
+                or query_lower in f["id"].lower()
                 or query_lower in f["crop_2025"].lower()
                 or query_lower in f["soil_type"].lower()
+                or query_lower in str(f["stress_index"]).lower()
             )
             if match:
                 matches.append(
@@ -184,7 +134,7 @@ def register_interaction_callbacks(app: dash.Dash) -> None:
                                 className="d-flex align-items-center",
                             ),
                             html.Div(
-                                f"{f['crop_2025']} • {f['area_acres']:.1f} ac • {f['soil_type']}",
+                                f"{f['crop_2025']} • {f['area_acres']:.1f} ac • {f['soil_type']} • Stress {f['stress_index']}",
                                 className="search-result-meta",
                             ),
                         ],

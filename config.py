@@ -222,11 +222,11 @@ LAYOUT = {
 
 KPI_CONFIG = [
     {"id": "total_fields", "label": "Total Fields", "icon": "map", "format": "integer"},
-    {"id": "total_acres", "label": "Total Acres", "icon": "ruler", "format": "decimal", "unit": "ac"},
-    {"id": "avg_ndvi", "label": "Avg NDVI", "icon": "chart", "format": "decimal", "range": [0, 1]},
-    {"id": "avg_stress", "label": "Avg Stress", "icon": "alert", "format": "integer", "unit": "/100"},
-    {"id": "high_risk", "label": "High Risk", "icon": "warning", "format": "integer"},
-    {"id": "well_drained", "label": "Well Drained", "icon": "water", "format": "integer"},
+    {"id": "avg_ndvi", "label": "Average NDVI", "icon": "chart", "format": "decimal", "range": [0, 1]},
+    {"id": "avg_rainfall", "label": "Average Rainfall", "icon": "water", "format": "decimal", "unit": "mm"},
+    {"id": "avg_heat_stress", "label": "Average Heat Stress", "icon": "fire", "format": "decimal", "unit": "days"},
+    {"id": "high_risk", "label": "High-Risk Fields", "icon": "warning", "format": "integer"},
+    {"id": "avg_field_stress", "label": "Avg Field Stress Index", "icon": "alert", "format": "decimal", "unit": "/100"},
 ]
 
 # =============================================================================

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dash import html
+from dash import html, dcc
 import dash_bootstrap_components as dbc
 
 from data import YEARS, CROPS
@@ -168,37 +168,80 @@ def create_add_farm_modal() -> html.Div:
                                         ],
                                         className="mb-3",
                                     ),
-                                    
-                                    # Unsupported features (hidden)
+
+                                    # Boundary Upload
                                     html.Div(
                                         [
-                                            html.Hr(),
-                                            html.P("Advanced import options (coming soon):", className="text-muted small fw-medium"),
+                                            dbc.Label("Boundary Sources", className="fw-medium"),
                                             html.Div(
                                                 [
-                                                    html.Button(
-                                                        "📁 GeoJSON Upload",
-                                                        className="ga-filter-btn me-2 mb-2",
-                                                        disabled=True,
-                                                        title="GeoJSON upload is not yet available",
+                                                    # GeoJSON upload
+                                                    dcc.Upload(
+                                                        id="add-farm-upload-geojson",
+                                                        children=html.Div(
+                                                            [
+                                                                html.Span("📄", className="me-2"),
+                                                                html.Span("Drag & Drop or ", className="text-muted"),
+                                                                html.A("Select GeoJSON", className="text-primary"),
+                                                            ]
+                                                        ),
+                                                        style={
+                                                            "width": "100%",
+                                                            "height": "60px",
+                                                            "lineHeight": "60px",
+                                                            "borderWidth": "1px",
+                                                            "borderStyle": "dashed",
+                                                            "borderRadius": "8px",
+                                                            "textAlign": "center",
+                                                            "marginBottom": "8px",
+                                                        },
+                                                        multiple=False,
+                                                        accept=".geojson,.json",
                                                     ),
-                                                    html.Button(
-                                                        "📦 Shapefile Upload",
-                                                        className="ga-filter-btn me-2 mb-2",
-                                                        disabled=True,
-                                                        title="Shapefile upload is not yet available",
+                                                    html.Div(
+                                                        id="add-farm-geojson-status",
+                                                        className="text-muted small mb-2",
                                                     ),
-                                                    html.Button(
-                                                        "🔄 Import from Runtime",
-                                                        className="ga-filter-btn mb-2",
-                                                        disabled=True,
-                                                        title="Runtime import is not yet available",
+
+                                                    # Shapefile/ZIP upload
+                                                    dcc.Upload(
+                                                        id="add-farm-upload-shapefile",
+                                                        children=html.Div(
+                                                            [
+                                                                html.Span("📦", className="me-2"),
+                                                                html.Span("Drag & Drop or ", className="text-muted"),
+                                                                html.A("Select Zipped Shapefile", className="text-primary"),
+                                                            ]
+                                                        ),
+                                                        style={
+                                                            "width": "100%",
+                                                            "height": "60px",
+                                                            "lineHeight": "60px",
+                                                            "borderWidth": "1px",
+                                                            "borderStyle": "dashed",
+                                                            "borderRadius": "8px",
+                                                            "textAlign": "center",
+                                                            "marginBottom": "8px",
+                                                        },
+                                                        multiple=False,
+                                                        accept=".zip",
+                                                    ),
+                                                    html.Div(
+                                                        id="add-farm-shapefile-status",
+                                                        className="text-muted small mb-2",
+                                                    ),
+
+                                                    # File validation error
+                                                    html.Div(
+                                                        id="add-farm-file-error",
+                                                        className="text-danger small mt-1",
+                                                        style={"display": "none"},
                                                     ),
                                                 ],
-                                                className="d-flex flex-wrap",
+                                                className="mt-2",
                                             ),
                                         ],
-                                        className="mb-2 opacity-50",
+                                        className="mb-3",
                                     ),
                                 ],
                                 className="modal-body",
@@ -236,7 +279,6 @@ def create_add_farm_modal() -> html.Div:
                 ],
                 className="modal-container modal-lg",
                 id="add-farm-overlay",
-                style={"display": "none"},
             ),
         ],
         id="add-farm-wrapper",

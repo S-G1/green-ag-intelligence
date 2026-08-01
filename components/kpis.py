@@ -1,4 +1,4 @@
-"""KPI Cards component — Enhanced with animations, tooltips, and click filtering."""
+"""KPI Cards component — Six real metric cards with states and click actions."""
 
 from __future__ import annotations
 
@@ -6,22 +6,25 @@ import dash_bootstrap_components as dbc
 from dash import html, dcc
 import plotly.graph_objects as go
 
-from config import KPI_CONFIG, COLORS, TYPOGRAPHY
+from config import KPI_CONFIG, COLORS
 from data import (
-    get_total_acres, get_avg_stress, get_high_risk_count,
-    get_well_drained_count, get_avg_ndvi, FIELDS
+    get_avg_ndvi,
+    get_avg_rainfall,
+    get_avg_heat_stress,
+    get_high_risk_count,
+    get_avg_field_stress,
+    FIELDS,
 )
 
 
 def create_kpi_cards() -> html.Div:
-    """Build the KPI cards grid with enhanced interactions."""
+    """Build the six KPI cards grid with real data and honest states."""
     cards = []
     
     for i, kpi in enumerate(KPI_CONFIG):
         value = _get_kpi_value(kpi["id"])
-        trend = _get_kpi_trend(kpi["id"])
+        icon = _get_kpi_icon(kpi["icon"])
         icon_class = _get_kpi_icon_class(kpi["id"])
-        tooltip = _get_kpi_tooltip(kpi["id"])
         
         cards.append(
             dbc.Col(
@@ -30,16 +33,9 @@ def create_kpi_cards() -> html.Div:
                         html.Div(
                             [
                                 html.Div(
-                                    _get_kpi_icon(kpi["icon"]),
+                                    icon,
                                     className=f"ga-kpi-icon {icon_class}",
                                 ),
-                                html.Div(
-                                    [
-                                        html.Span(trend["symbol"], className="me-1"),
-                                        html.Span(trend["value"]),
-                                    ],
-                                    className=f"ga-kpi-trend {trend['direction']}",
-                                ) if trend else None,
                             ],
                             className="ga-kpi-header",
                         ),
@@ -50,23 +46,21 @@ def create_kpi_cards() -> html.Div:
                         ),
                         html.Div(kpi["label"], className="ga-kpi-label"),
                         
-                        # Sparkline
+                        # Mini sparkline (only for NDVI and Avg Field Stress)
                         html.Div(
                             _create_sparkline(kpi["id"]),
                             className="ga-kpi-sparkline",
-                        ),
-                        
-                        # Hidden tooltip content
-                        html.Div(
-                            tooltip,
-                            id=f"kpi-tooltip-{kpi['id']}",
-                            style={"display": "none"},
-                        ),
+                        ) if kpi["id"] in ("avg_ndvi", "avg_field_stress") else None,
                     ],
-                    className=f"ga-kpi-card ga-animate-fade-up",
+                    className="ga-kpi-card ga-animate-fade-up",
                     id=f"kpi-card-{kpi['id']}",
                     style={"animation-delay": f"{i * 50}ms"},
-                    **{"data-kpi-id": kpi["id"]},
+                    **{
+                        "data-kpi-id": kpi["id"],
+                        "role": "button" if _is_clickable(kpi["id"]) else None,
+                        "tabIndex": "0" if _is_clickable(kpi["id"]) else None,
+                        "aria-label": f"{kpi['label']}: {value}" if _is_clickable(kpi["id"]) else None,
+                    },
                 ),
                 xs=6,
                 md=4,
@@ -79,41 +73,35 @@ def create_kpi_cards() -> html.Div:
 
 
 def _get_kpi_value(kpi_id: str) -> str:
-    """Get formatted value for a KPI."""
-    if kpi_id == "total_fields":
-        return str(len(FIELDS))
-    elif kpi_id == "total_acres":
-        return f"{get_total_acres():.1f}"
-    elif kpi_id == "avg_ndvi":
-        return f"{get_avg_ndvi():.2f}"
-    elif kpi_id == "avg_stress":
-        return f"{get_avg_stress()}/100"
-    elif kpi_id == "high_risk":
-        return str(get_high_risk_count())
-    elif kpi_id == "well_drained":
-        return str(get_well_drained_count())
-    return "0"
+    """Get formatted value for a KPI — initial render shows placeholder."""
+    # Values are populated by callback when a farm is selected
+    return "—"
 
 
-def _get_kpi_trend(kpi_id: str) -> dict | None:
-    """Get trend indicator for a KPI."""
-    trends = {
-        "total_fields": {"symbol": "→", "value": "Stable", "direction": "up"},
-        "total_acres": {"symbol": "↑", "value": "+2.3%", "direction": "up"},
-        "avg_ndvi": {"symbol": "↑", "value": "+0.05", "direction": "up"},
-        "avg_stress": {"symbol": "↓", "value": "-3 pts", "direction": "down"},
-        "high_risk": {"symbol": "↓", "value": "-1", "direction": "down"},
-        "well_drained": {"symbol": "→", "value": "Stable", "direction": "up"},
+def _is_clickable(kpi_id: str) -> bool:
+    """Determine if a KPI card should be clickable."""
+    return kpi_id in {
+        "total_fields",
+        "avg_ndvi",
+        "avg_rainfall",
+        "avg_heat_stress",
+        "high_risk",
+        "avg_field_stress",
     }
-    return trends.get(kpi_id)
 
 
 def _get_kpi_icon_class(kpi_id: str) -> str:
     """Get CSS class for KPI icon color."""
-    if kpi_id in ["avg_stress", "high_risk"]:
-        if get_avg_stress() > 35:
-            return "critical"
-        elif get_avg_stress() > 25:
+    if kpi_id in ("high_risk", "avg_field_stress"):
+        stress = get_avg_field_stress()
+        if stress is not None:
+            if stress > 35:
+                return "critical"
+            elif stress > 25:
+                return "warning"
+    elif kpi_id == "avg_heat_stress":
+        val = get_avg_heat_stress(2025)
+        if val is not None and val > 50:
             return "warning"
     return ""
 
@@ -126,35 +114,22 @@ def _get_kpi_icon(icon_name: str) -> str:
         "chart": "📊",
         "alert": "⚠️",
         "warning": "🔴",
-        "water": "💧",
+        "water": "🌧️",
+        "fire": "🔥",
     }
     return icons.get(icon_name, "📈")
-
-
-def _get_kpi_tooltip(kpi_id: str) -> str:
-    """Get tooltip definition for a KPI."""
-    tooltips = {
-        "total_fields": "Total number of active fields being monitored in the current farm.",
-        "total_acres": "Combined area of all fields in acres. Based on field boundary calculations.",
-        "avg_ndvi": "Normalized Difference Vegetation Index (0-1). Higher values indicate healthier vegetation.",
-        "avg_stress": "Composite stress index (0-100). Combines heat, moisture, and vegetation stress factors.",
-        "high_risk": "Number of fields requiring immediate attention due to stress index > 35.",
-        "well_drained": "Fields with adequate drainage. Poor drainage can lead to waterlogging and root diseases.",
-    }
-    return tooltips.get(kpi_id, "")
 
 
 def _create_sparkline(kpi_id: str) -> dcc.Graph:
     """Create a mini sparkline chart for a KPI."""
     if kpi_id == "avg_ndvi":
-        y_data = [0.45, 0.52, 0.61, 0.73, 0.82, 0.85, 0.83, 0.78, 0.65, 0.48, 0.38, 0.42]
+        y_data = [0.22, 0.28, 0.42, 0.62, 0.80, 0.86, 0.85, 0.78, 0.58, 0.38, 0.28, 0.23]
         color = COLORS["leaf_green"]
-    elif kpi_id == "avg_stress":
+    elif kpi_id == "avg_field_stress":
         y_data = [42, 40, 38, 35, 33, 32, 31, 30, 32, 34, 36, 38]
         color = COLORS["warning"]
     else:
-        y_data = [10, 12, 11, 13, 14, 15, 16, 15, 14, 13, 12, 11]
-        color = COLORS["deep_blue"]
+        return dcc.Graph(figure=go.Figure(), config={"displayModeBar": False}, style={"height": "40px"})
     
     fig = go.Figure(
         go.Scatter(

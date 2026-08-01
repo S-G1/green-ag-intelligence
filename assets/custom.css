@@ -858,123 +858,73 @@ body {
 }
 
 /* =============================================================================
-   Onboarding Dialog
+   Empty State Banner
    ============================================================================= */
 
-/* Onboarding dialog — now rendered via dbc.Modal.
-   The .ga-onboarding-overlay and .ga-onboarding wrappers are obsolete;
-   styling targets remain in use via .ga-onboarding-logo, .ga-onboarding-option, etc.
-*/
-
-.ga-onboarding-logo {
-  width: 64px;
-  height: 64px;
-  background: linear-gradient(135deg, var(--ga-primary) 0%, var(--ga-primary-light) 100%);
-  border-radius: var(--radius-xl);
-  display: flex;
+.ga-empty-state-banner {
+  display: none;
   align-items: center;
   justify-content: center;
-  margin: 0 auto var(--space-lg);
-  color: white;
-  font-size: 2rem;
+  padding: var(--space-md) var(--space-lg);
+  background: var(--ga-info-light);
+  border-bottom: 1px solid var(--ga-border);
+  color: var(--ga-info);
+  font-size: var(--font-size-body-sm);
 }
 
-.ga-onboarding-title {
-  font-size: var(--font-size-h1);
-  font-weight: 700;
-  color: var(--ga-text-primary);
-  margin-bottom: var(--space-sm);
-}
-
-.ga-onboarding-subtitle {
-  font-size: var(--font-size-body);
-  color: var(--ga-text-secondary);
-  margin-bottom: var(--space-xl);
-}
-
-.ga-onboarding-options {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-md);
-}
-
-.ga-onboarding-option {
-  display: flex;
+.ga-empty-state-inner {
+  display: inline-flex;
   align-items: center;
-  gap: var(--space-md);
-  padding: var(--space-lg);
-  border: 1px solid var(--ga-border);
-  border-radius: var(--radius-lg);
-  background: var(--ga-bg-card);
-  cursor: pointer;
-  transition: all var(--transition-normal);
-  text-align: left;
-  /* Reset button defaults for accessibility */
-  appearance: none;
-  -webkit-appearance: none;
-  font-family: inherit;
-  font-size: inherit;
-  color: inherit;
-  width: 100%;
+  gap: var(--space-xs);
 }
 
-.ga-onboarding-option:hover {
-  border-color: var(--ga-primary-light);
-  background: var(--ga-bg-hover);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
-
-.ga-onboarding-option:focus-visible {
-  outline: 3px solid var(--ga-primary);
-  outline-offset: 2px;
-  border-color: var(--ga-primary);
-}
-
-.ga-onboarding-option:active {
-  transform: translateY(0);
-}
-
-.ga-onboarding-option-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: var(--radius-lg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.5rem;
-  flex-shrink: 0;
-}
-
-.ga-onboarding-option-icon.primary {
-  background: var(--ga-success-bg);
-  color: var(--ga-success);
-}
-
-.ga-onboarding-option-icon.secondary {
-  background: var(--ga-info-bg);
+[data-theme="dark"] .ga-empty-state-banner {
+  background: rgba(2, 136, 209, 0.15);
   color: var(--ga-info);
 }
 
-.ga-onboarding-option-icon.success {
-  background: var(--ga-primary-bg, rgba(27, 94, 32, 0.1));
-  color: var(--ga-primary);
+/* =============================================================================
+   Primary Dashboard Actions
+   ============================================================================= */
+
+.ga-dashboard-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-lg);
+  background: var(--ga-bg-card);
+  border-bottom: 1px solid var(--ga-border);
+  flex-wrap: wrap;
 }
 
-.ga-onboarding-option-content {
-  flex: 1;
+.ga-dashboard-actions .ga-filter-btn {
+  min-height: 44px;
+  min-width: 120px;
+  justify-content: center;
 }
 
-.ga-onboarding-option-title {
-  font-size: var(--font-size-body);
-  font-weight: 600;
-  color: var(--ga-text-primary);
-  margin-bottom: var(--space-xs);
+.ga-dashboard-actions .ga-filter-btn-primary {
+  background: var(--ga-primary);
+  color: white;
+  border-color: var(--ga-primary);
 }
 
-.ga-onboarding-option-desc {
-  font-size: var(--font-size-caption);
-  color: var(--ga-text-muted);
+.ga-dashboard-actions .ga-filter-btn-primary:hover {
+  background: var(--ga-primary-dark);
+  border-color: var(--ga-primary-dark);
+  color: white;
+}
+
+.ga-dashboard-actions .ga-filter-btn-secondary {
+  background: var(--ga-secondary);
+  color: white;
+  border-color: var(--ga-secondary);
+}
+
+.ga-dashboard-actions .ga-filter-btn-secondary:hover {
+  background: var(--ga-deep_blue);
+  border-color: var(--ga-deep_blue);
+  color: white;
 }
 
 /* =============================================================================

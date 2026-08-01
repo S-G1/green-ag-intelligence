@@ -318,3 +318,26 @@ def get_well_drained_count() -> int:
 def get_avg_ndvi(month: int = 6) -> float:
     """Get average NDVI for a specific month (default July)."""
     return round(np.mean([f["ndvi_2025"][month] for f in FIELDS]), 2)
+
+
+def get_avg_rainfall(year: int = 2025) -> float | None:
+    """Get average monthly rainfall (mm) for a specific year."""
+    data = get_weather_by_year(year)
+    if not data:
+        return None
+    return round(np.mean([d["rainfall_mm"] for d in data]), 1)
+
+
+def get_avg_heat_stress(year: int = 2025) -> float | None:
+    """Get average monthly heat-stress days for a specific year."""
+    data = get_weather_by_year(year)
+    if not data:
+        return None
+    return round(np.mean([d["heat_stress_days"] for d in data]), 1)
+
+
+def get_avg_field_stress() -> float | None:
+    """Get average field stress index across all fields."""
+    if not FIELDS:
+        return None
+    return round(np.mean([f["stress_index"] for f in FIELDS]), 1)

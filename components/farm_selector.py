@@ -143,7 +143,6 @@ def create_farm_selector() -> html.Div:
                 ],
                 className="modal-container",
                 id="farm-selector-overlay",
-                style={"display": "none"},
             ),
         ],
         id="farm-selector-wrapper",

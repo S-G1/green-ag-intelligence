@@ -36,6 +36,8 @@ python app.py
 
 Open http://localhost:8050 in your browser.
 
+**The dashboard loads immediately** — no onboarding modal. Use the three primary action buttons (Open Existing Farm, Add Farm, Launch Demo Mode) to get started.
+
 ### Deploy to Render (Recommended)
 
 1. Push this repo to GitHub
@@ -44,6 +46,11 @@ Open http://localhost:8050 in your browser.
 4. Deploys automatically on every push
 
 **Start command:** `gunicorn app:server`
+
+**Environment variables:**
+- `MY_FARM_ADVISOR_RUNTIME` — Path to runtime data-pipeline (default: `~/my-farm-advisor-runtime/data-pipeline`)
+- `PORT` — Server port (default: `8050`)
+- `DASH_DEBUG` — Enable debug mode (`0` or `1`)
 
 ### Deploy to Heroku
 
@@ -106,7 +113,9 @@ green-ag-intelligence/
 │   ├── gauge.py              # Animated circular stress gauge
 │   ├── recommendations.py    # Severity-coded advice cards
 │   ├── command_palette.py    # Ctrl+K overlay with fuzzy search
-│   ├── onboarding.py         # First-time welcome dialog
+│   ├── add_farm.py           # Add new farm modal with GeoJSON/Shapefile upload
+│   ├── farm_selector.py      # Select existing farm modal
+│   ├── toast.py              # Transient notification overlay
 │   └── footer.py             # Professional footer
 │
 ├── callbacks/                # Business logic
@@ -129,9 +138,11 @@ green-ag-intelligence/
 
 The app launches directly into the **Overview** dashboard. All sections are accessible via the left navigation rail.
 
-### 1. Overview (Default)
-- **6 KPI Cards** — Total Fields, Total Acres, Avg NDVI, Avg Stress, High Risk count, Well Drained count
-- **Interactive Map** — Plotly Mapbox with field boundaries, 10 layer toggles (NDVI, Risk, Heat Stress, Rainfall, Soil, Slope, Elevation, Satellite, Dark, Light)
+### 1. Overview (Default — Dashboard-First)
+- **Empty-State Banner** — "Select an existing farm, add a farm, or launch the Maryland demo" when no farm is selected
+- **Three Primary Actions** — Open Existing Farm, Add Farm, Launch Demo Mode (top toolbar)
+- **6 KPI Cards** — Total Fields, Avg NDVI, Avg Rainfall, Avg Heat Stress, High-Risk Fields, Avg Field Stress Index
+- **Interactive Map** — Plotly Mapbox with field boundaries, 10 layer toggles (NDVI, Risk, Heat Stress, Rainfall, Elevation, Slope, Aspect, Hillshade, Wetness, Soil Health)
 - **NDVI Panel** — Bar chart with monthly sorting + play/loop animation
 - **Weather Panel** — 4-tab analytics: Combined, Rainfall, Temperature, Heat Stress
 - **Field Table** — Paginated, searchable, exportable (CSV + multi-sheet Excel)
@@ -182,9 +193,10 @@ The app launches directly into the **Overview** dashboard. All sections are acce
 ## 🎨 UX Features
 
 - **Command Palette** — `Ctrl+K` opens overlay, real-time filtering, navigates to any page, launches demo, exports data
-- **Onboarding** — First-time dialog: Open Farm / Add Farm / Launch Demo
-- **Demo Mode** — Auto-starts NDVI animation, badge in header, exit button
-- **Theme Toggle** — Light/dark mode with CSS custom properties
+- **Dashboard-First** — No onboarding modal; dashboard loads immediately with empty-state banner
+- **Three Primary Actions** — Open Existing Farm, Add Farm, Launch Demo Mode (prominent in toolbar)
+- **Demo Mode** — Auto-loads Maryland farm data, badge in header, exit button
+- **Theme Toggle** — Light/dark mode with CSS custom properties, persisted in localStorage
 - **Global Search** — Search fields by name, crop, or soil type; dropdown results
 - **Responsive** — Collapsible navigation rail (240px → 72px), stacked layout below 768px
 - **Keyboard Shortcuts** — `Ctrl+K` command palette, `Ctrl+Shift+L` theme, `Ctrl+Shift+D` demo, `Esc` close overlays
@@ -224,6 +236,13 @@ Monthly aggregates from **NASA POWER S3 Zarr**:
 - `data.py:get_weather_by_year()` — Year filter helper
 - `data.py:get_total_acres()` / `get_avg_stress()` / `get_high_risk_count()` / `get_well_drained_count()` / `get_avg_ndvi()` — Aggregate helpers
 
+### Report Serving
+Farm reports are served from the runtime directory via `/reports/<filename>`:
+```
+/reports/md_caroline_farm_report.html
+```
+Configure `MY_FARM_ADVISOR_RUNTIME` to point to your data-pipeline root.
+
 ---
 
 ## 👤 Author
@@ -243,7 +262,7 @@ Apache-2.0
 - **GitHub Repository**: https://github.com/S-G1/green-ag-intelligence
 - **Dashboard Info**: See `DASHBOARD.md` for supplementary documentation
 - **Supplementary Documentation**: See `DASHBOARD.md` for project overview, dataset description, dashboard explanation, analytical interpretation, and AI usage documentation.
-- **Pull Request**: https://github.com/S-G1/green-ag-intelligence/pull/new/release/v2.2-documentation
-  (Branch: `release/v2.2-documentation` → `main`)
+- **Pull Request**: https://github.com/S-G1/green-ag-intelligence/pulls
+  (Latest: `release/v2.2-dashboard-first` → `main`)
 - **Hosted Dashboard**: Deploy via Render blueprint (`render.yaml`) — see Quick Start above
-- **Live Demo URL**: Configure via Render Dashboard after connecting repo
+- **Live Demo URL**: https://green-ag-intelligence.onrender.com (after deployment)

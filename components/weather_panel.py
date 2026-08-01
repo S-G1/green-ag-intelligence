@@ -52,11 +52,6 @@ def create_weather_panel(year: int = 2025, active_tab: str = "combined") -> html
                                 id="btn-export-weather",
                                 className="ga-card-btn",
                             ),
-                            html.Button(
-                                "📊 PNG",
-                                id="btn-export-weather-png",
-                                className="ga-card-btn",
-                            ),
                         ],
                         className="ga-card-actions",
                     ),
