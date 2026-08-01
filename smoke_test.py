@@ -47,7 +47,7 @@ async def test_app():
             elem = await page.query_selector(f"#{kpi_id}")
             print(f"  {'✓' if elem else '✗'} {kpi_id}: {elem is not None}")
         
-        await page.screenshot(path="/home/coder/plotly-upload/screenshots/01_clean_start.png")
+        await page.screenshot(path="./screenshots/01_clean_start.png")
         
         print("\n=== Test 2: Launch Demo Mode ===")
         if btn_demo:
@@ -64,7 +64,7 @@ async def test_app():
             value_text = await kpi_value.inner_text() if kpi_value else ""
             print(f"✓ Total Fields KPI: {value_text}")
             
-            await page.screenshot(path="/home/coder/plotly-upload/screenshots/02_demo_mode.png")
+            await page.screenshot(path="./screenshots/02_demo_mode.png")
         
         print("\n=== Test 3: Open Farm Selector ===")
         if btn_open:
@@ -98,7 +98,7 @@ async def test_app():
             else:
                 print("  ⚠ Farm selector did not open — checking for errors")
             
-            await page.screenshot(path="/home/coder/plotly-upload/screenshots/03_open_farm.png")
+            await page.screenshot(path="./screenshots/03_open_farm.png")
         
         print("\n=== Test 4: Add Farm Modal ===")
         # Ensure farm selector is closed (check backdrop)
@@ -126,7 +126,7 @@ async def test_app():
                 await asyncio.sleep(1)
                 print("✓ Cancel closed modal")
             
-            await page.screenshot(path="/home/coder/plotly-upload/screenshots/04_add_farm.png")
+            await page.screenshot(path="./screenshots/04_add_farm.png")
         
         print("\n=== Test 5: Map Layers ===")
         layer_btns = ["map-layer-ndvi", "map-layer-risk", "map-layer-heat_stress", "map-layer-rainfall"]
@@ -137,7 +137,7 @@ async def test_app():
                 await asyncio.sleep(0.5)
                 print(f"✓ Layer {btn_id} clicked")
         
-        await page.screenshot(path="/home/coder/plotly-upload/screenshots/05_map_layers.png")
+        await page.screenshot(path="./screenshots/05_map_layers.png")
         
         print("\n=== Test 6: Weather Tabs ===")
         weather_tabs = ["weather-tab-combined", "weather-tab-rainfall", "weather-tab-temperature", "weather-tab-heat"]
@@ -149,7 +149,7 @@ async def test_app():
                 is_active = "active" in (await tab.get_attribute("class") or "")
                 print(f"✓ Weather tab {tab_id} active: {is_active}")
         
-        await page.screenshot(path="/home/coder/plotly-upload/screenshots/06_weather_tabs.png")
+        await page.screenshot(path="./screenshots/06_weather_tabs.png")
         
         print("\n=== Test 7: Field Table Search ===")
         # Use page.locator to avoid stale element handles
@@ -174,7 +174,7 @@ async def test_app():
                 await asyncio.sleep(0.5)
                 print("✓ Clear search works (input clear)")
         
-        await page.screenshot(path="/home/coder/plotly-upload/screenshots/07_table_search.png")
+        await page.screenshot(path="./screenshots/07_table_search.png")
         
         print("\n=== Test 8: Theme Toggle ===")
         theme_btn = await page.query_selector("#btn-theme-toggle")
@@ -189,7 +189,7 @@ async def test_app():
             await theme_btn.click()
             await asyncio.sleep(0.5)
         
-        await page.screenshot(path="/home/coder/plotly-upload/screenshots/08_theme.png")
+        await page.screenshot(path="./screenshots/08_theme.png")
         
         # Summary
         print("\n" + "="*60)

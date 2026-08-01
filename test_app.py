@@ -38,7 +38,7 @@ async def test_app():
                 failed.append("Test 1: Dashboard loads immediately")
                 print("✗ Dashboard did not load correctly")
 
-            await page.screenshot(path="/home/coder/plotly-upload/screenshots/01_dashboard.png")
+            await page.screenshot(path="./screenshots/01_dashboard.png")
 
             # =====================================================================
             # Test 2: Six KPI cards present with real data
@@ -101,7 +101,7 @@ async def test_app():
                 else:
                     failed.append("Test 4: Farm selector opens")
                     print("✗ Farm selector not visible")
-                await page.screenshot(path="/home/coder/plotly-upload/screenshots/04_farm_selector.png")
+                await page.screenshot(path="./screenshots/04_farm_selector.png")
             else:
                 failed.append("Test 4: Farm selector opens")
                 print("✗ Open Existing Farm button not found")
@@ -129,7 +129,7 @@ async def test_app():
                 else:
                     failed.append("Test 5: Add farm modal opens")
                     print("✗ Add farm modal not visible")
-                await page.screenshot(path="/home/coder/plotly-upload/screenshots/05_add_farm.png")
+                await page.screenshot(path="./screenshots/05_add_farm.png")
             else:
                 failed.append("Test 5: Add farm modal opens")
                 print("✗ Add Farm button not found")
@@ -162,7 +162,7 @@ async def test_app():
                     else:
                         failed.append("Test 6: Demo mode activates")
                         print("✗ Demo badge not found")
-                await page.screenshot(path="/home/coder/plotly-upload/screenshots/06_demo_mode.png")
+                await page.screenshot(path="./screenshots/06_demo_mode.png")
             else:
                 failed.append("Test 6: Demo mode activates")
                 print("✗ Launch Demo Mode button not found")
@@ -184,7 +184,7 @@ async def test_app():
                 html_class = await html_elem.get_attribute("data-theme") if html_elem else ""
                 passed.append("Test 7: Theme toggle")
                 print(f"✓ Theme toggle clicked (html data-theme={html_class})")
-                await page.screenshot(path="/home/coder/plotly-upload/screenshots/07_dark_theme.png")
+                await page.screenshot(path="./screenshots/07_dark_theme.png")
             else:
                 failed.append("Test 7: Theme toggle")
                 print("✗ Theme toggle button not found")
@@ -221,7 +221,7 @@ async def test_app():
                 failed.append("Test 8: Map layer switching")
                 print("✗ Map graph not found")
 
-            await page.screenshot(path="/home/coder/plotly-upload/screenshots/08_map_layer.png")
+            await page.screenshot(path="./screenshots/08_map_layer.png")
 
             # =====================================================================
             # Test 9: NDVI play button
@@ -240,7 +240,7 @@ async def test_app():
                 failed.append("Test 9: NDVI play button")
                 print("✗ NDVI play button not found")
 
-            await page.screenshot(path="/home/coder/plotly-upload/screenshots/09_ndvi_play.png")
+            await page.screenshot(path="./screenshots/09_ndvi_play.png")
 
             # =====================================================================
             # Test 10: Table search
@@ -262,7 +262,7 @@ async def test_app():
                 failed.append("Test 10: Table search")
                 print("✗ Table search input not found")
 
-            await page.screenshot(path="/home/coder/plotly-upload/screenshots/10_table_search.png")
+            await page.screenshot(path="./screenshots/10_table_search.png")
 
             # =====================================================================
             # Test 11: Weather tab switching
@@ -278,7 +278,7 @@ async def test_app():
                 failed.append("Test 11: Weather tab switching")
                 print("✗ Weather tab not found")
 
-            await page.screenshot(path="/home/coder/plotly-upload/screenshots/11_weather_tab.png")
+            await page.screenshot(path="./screenshots/11_weather_tab.png")
 
             # =====================================================================
             # Test 12: Farm selector cancel/close
