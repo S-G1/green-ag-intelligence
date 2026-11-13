@@ -1,14 +1,67 @@
-# 🌱 Green Ag Intelligence Platform
+# Green Ag Intelligence Platform
 
-**Version 2.2 — Enterprise Agricultural Intelligence Platform**
+**Precision agriculture decision support portfolio application**
 
-Environmental Risk Monitoring & Decision Support
+A modular Python/Plotly Dash application for exploring field records, NDVI, weather, soil, terrain, and environmental-risk displays in a Caroline County, Maryland case study.
 
-Real Caroline County, MD data from NASA POWER, USGS 3DEP, SSURGO, and CDL.
+[Source code](https://github.com/S-G1/green-ag-intelligence) · [Technical case study](DASHBOARD.md) · [Live demo preview](https://green-ag-intelligence-1.onrender.com/) · [Data validation status](DATA_VALIDATION.md)
 
----
+[![Playwright CI](https://github.com/S-G1/green-ag-intelligence/actions/workflows/playwright.yml/badge.svg?branch=main)](https://github.com/S-G1/green-ag-intelligence/actions/workflows/playwright.yml)
 
-## 🚀 Quick Start
+## What it does
+
+The project brings agricultural information into an interactive interface for comparing fields and exploring possible scouting priorities. It demonstrates application design, data visualization, and agricultural decision-support workflows.
+
+- Field and map views with selectable analytical layers.
+- Monthly NDVI comparisons and crop-health views.
+- Weather charts covering 2021–2025.
+- Soil, drainage, elevation, slope, and field-comparison displays.
+- KPI summaries, illustrative rule-based recommendations, and reports.
+- CSV and multi-sheet Excel exports.
+- Modular components and callbacks, navigation, search, demo mode, and theme controls.
+
+These are portfolio capabilities. They do not establish commercial customer use, validated agronomic recommendations, or a production farm-management service.
+
+## Preview and current readiness
+
+The hosted application loaded during a desktop browser check on November 13, 2026. Demo activation, weather navigation, and field-search responses were observed. Full readiness has not been established: map rendering encountered a WebGL error in that browser, horizontal overflow and KPI-state changes were observed, and mobile, private-window, and coherent theme behavior still need verification.
+
+Use the source code and technical case study as the primary portfolio references until the live-demo and data checks in [DATA_VALIDATION.md](DATA_VALIDATION.md) are complete. Capture current desktop and mobile screenshots after those checks; this repository does not yet include a verified screenshot preview.
+
+## Data sources and scope
+
+`data.py` embeds ten field records, twelve NDVI values per field for 2025, and sixty monthly weather records for 2021–2025. The application uses this embedded snapshot rather than querying the source services at runtime.
+
+The project documentation attributes upstream data to NASA POWER, USGS 3DEP, NRCS SSURGO, USDA NASS Cropland Data Layer, and OpenStreetMap, and describes Sentinel-2/Landsat NDVI processing. The corresponding source extracts and reproducible upstream processing are not included in this repository, so those attribution and derivation claims need source reconciliation.
+
+Current checks found zero-area polygon rings, impossible monthly counts under the label “heat-stress days,” and differences between documented and embedded acreage, crop, soil, and risk summaries. Do not interpret the displayed recommendations as validated agronomic advice. See [DATA_VALIDATION.md](DATA_VALIDATION.md) for exact findings and acceptance checks.
+
+## Architecture and stack
+
+- **Application:** Python, Plotly Dash, dash-bootstrap-components.
+- **Data and charts:** Pandas, NumPy, Plotly; openpyxl for Excel.
+- **Structure:** `app.py`, `config.py`, and `data.py`; reusable UI in `components/`; interactions, navigation, themes, and exports in `callbacks/`.
+- **Deployment configuration:** Gunicorn, Render blueprint, and Heroku Procfile.
+- **Browser checks:** Playwright/Chromium through GitHub Actions.
+
+## Analytical interpretation
+
+The interface presents NDVI, soil, terrain, weather, and risk information together. Quantitative findings and field-level management recommendations remain provisional until the dataset, units, geometry, provenance, and category thresholds pass validation. The technical case study distinguishes documented intentions from current code evidence.
+
+## Testing and CI
+
+The workflow in `.github/workflows/playwright.yml` starts the app and runs:
+
+```bash
+python smoke_test.py
+python test_app.py
+```
+
+A fresh installation on November 13, 2026 selected Plotly 7.1.0 and failed at startup because the app uses the removed `Scattermapbox` API. `requirements.txt` now caps Plotly below 7 pending a tested map migration. Consult the pull request checks for the current result.
+
+The main-branch push workflow for commit `2a0b6f0` completed successfully on August 1, 2026. That result is evidence of that run, not a check of current hosted deployment health or data accuracy. The smoke script logs errors without failing on all of them, and the comprehensive script fails for its collected functional failures but permits console/page errors. Extend meaningful assertions when repairing the application.
+
+## Quick Start
 
 ### Prerequisites
 
@@ -36,7 +89,9 @@ python app.py
 
 Open http://localhost:8050 in your browser.
 
-**The dashboard loads immediately** — no onboarding modal. Use the three primary action buttons (Open Existing Farm, Add Farm, Launch Demo Mode) to get started.
+Use **Launch Demo Mode** to explore the Maryland case study. Allow time for server startup and client-side charts.
+
+## Deployment
 
 ### Deploy to Render (Recommended)
 
@@ -60,209 +115,21 @@ heroku config:set DASH_DEBUG=0
 git push heroku main
 ```
 
----
+## Documentation
 
-## 📦 Dependencies
+- [Technical case study and AI development notes](DASHBOARD.md)
+- [Data validation findings and repair sequence](DATA_VALIDATION.md)
+- [Browser workflow](.github/workflows/playwright.yml)
 
-| Package | Version | Purpose |
-|---|---|---|
-| `dash` | >=2.18.0 | Web application framework |
-| `dash-bootstrap-components` | >=1.6.0 | Bootstrap UI components |
-| `plotly` | >=5.24.0 | Interactive visualizations |
-| `pandas` | >=2.2.0 | Data manipulation |
-| `numpy` | >=2.0.0 | Numerical computing |
-| `gunicorn` | >=23.0.0 | WSGI production server |
-| `openpyxl` | >=3.1.0 | Excel export engine |
+## AI assistance
 
-See `requirements.txt` for exact versions.
+Development used AI coding assistance within a human-directed workflow. The project documentation describes human work in defining requirements, reviewing implementation, debugging, interpreting data, and preparing deployment. See the technical case study for the detailed account. The application does not document a deployed machine-learning model or runtime LLM service.
 
----
+## Author
 
-## 📁 Architecture
+Stephon Green
 
-```
-green-ag-intelligence/
-├── app.py                    # Entry point — layout + routing + stores
-├── config.py                 # Design tokens, KPI config, map config
-├── data.py                   # Embedded real Caroline County data (10 fields, 5yr weather)
-├── requirements.txt          # Python dependencies
-├── Procfile                  # Heroku deployment
-├── render.yaml               # Render auto-deploy config
-│
-├── assets/
-│   ├── custom.css            # Complete design system (900+ lines, light/dark themes)
-│   └── nav_rail.css          # Navigation rail styles
-│
-├── components/               # Reusable UI components
-│   ├── header.py             # Enterprise header with farm pill, notifications, theme
-│   ├── nav_rail.py           # Collapsible 8-section sidebar
-│   ├── search.py             # Global search bar with field dropdown results
-│   ├── filters.py            # Inline filter toolbar
-│   ├── kpis.py               # 6 KPI cards with sparklines
-│   ├── map_component.py      # Overview interactive map (10 layers)
-│   ├── map_explorer.py       # Full-screen Map Explorer page
-│   ├── ndvi_panel.py         # NDVI bar chart + slider + play/loop
-│   ├── weather_panel.py      # Overview 4-panel weather analytics
-│   ├── weather_page.py       # Dedicated Weather page (multi-year)
-│   ├── field_table.py        # Sortable, paginated, searchable table
-│   ├── crop_health.py        # NDVI heatmap + field health cards
-│   ├── soil_terrain.py       # Soil scatter, elevation chart, soil table
-│   ├── farm_management.py    # Field inventory + management actions
-│   ├── reports.py            # Crop pie, stress bar, weather summaries
-│   ├── settings.py           # Theme, notifications, data preferences
-│   ├── gauge.py              # Animated circular stress gauge
-│   ├── recommendations.py    # Severity-coded advice cards
-│   ├── command_palette.py    # Ctrl+K overlay with fuzzy search
-│   ├── add_farm.py           # Add new farm modal with GeoJSON/Shapefile upload
-│   ├── farm_selector.py      # Select existing farm modal
-│   ├── toast.py              # Transient notification overlay
-│   └── footer.py             # Professional footer
-│
-├── callbacks/                # Business logic
-│   ├── interactions.py       # Cross-component filtering, search, NDVI play
-│   ├── navigation.py         # Page routing, demo mode, command palette
-│   ├── theme.py              # Light/dark toggle
-│   └── export.py             # CSV, Excel, multi-sheet export
-│
-└── charts/                   # Plotly Chart Studio JSON snapshots
-    ├── chart_map.json
-    ├── chart_ndvi.json
-    ├── chart_weather.json
-    ├── chart_heat_stress.json
-    └── chart_gauge.json
-```
+## License
 
----
+A license has not yet been established by a LICENSE file in this repository. The previous Apache-2.0 label was removed pending the owner's explicit license choice. Do not assume a reuse grant from the former label.
 
-## 📊 Dashboard Pages (8 Sections)
-
-The app launches directly into the **Overview** dashboard. All sections are accessible via the left navigation rail.
-
-### 1. Overview (Default — Dashboard-First)
-- **Empty-State Banner** — "Select an existing farm, add a farm, or launch the Maryland demo" when no farm is selected
-- **Three Primary Actions** — Open Existing Farm, Add Farm, Launch Demo Mode (top toolbar)
-- **6 KPI Cards** — Total Fields, Avg NDVI, Avg Rainfall, Avg Heat Stress, High-Risk Fields, Avg Field Stress Index
-- **Interactive Map** — Plotly Mapbox with field boundaries, 10 layer toggles (NDVI, Risk, Heat Stress, Rainfall, Elevation, Slope, Aspect, Hillshade, Wetness, Soil Health)
-- **NDVI Panel** — Bar chart with monthly sorting + play/loop animation
-- **Weather Panel** — 4-tab analytics: Combined, Rainfall, Temperature, Heat Stress
-- **Field Table** — Paginated, searchable, exportable (CSV + multi-sheet Excel)
-- **Stress Gauge** — Circular gauge with risk categories + historical trend
-- **Recommendations** — Confidence-scored cards with severity (healthy/monitor/alert/critical)
-
-### 2. Map Explorer
-- Full-screen interactive Plotly Mapbox
-- Field polygon overlays from OpenStreetMap
-- Sidebar with layer toggles and field list
-- Hover info with acres, crop, NDVI values
-
-### 3. Crop Health
-- **NDVI Timeline Comparison** — All 10 fields on one chart (color-coded by stress)
-- **NDVI Heatmap** — Field × Month matrix (RdYlGn colorscale)
-- **Field Health Cards** — Per-field avg NDVI, peak NDVI, peak month, stress, health status badge
-
-### 4. Weather
-- **Temperature Trends** — 2021–2025 multi-line with max temp dashed overlay
-- **Monthly Rainfall** — Grouped bar chart by year
-- **Heat Stress Days** — Area chart showing cumulative stress days per month
-- **Annual Summary Cards** — Rainfall, avg temp, heat stress days per year
-
-### 5. Soil & Terrain
-- **pH vs Organic Matter Scatter** — Bubble size = field area, color = drainage
-- **Elevation & Slope Combo Chart** — Dual-axis line + bar chart
-- **Drainage Summary Cards** — Well drained vs poorly drained field counts
-- **Soil Properties Table** — Full 10-field detail with pH, OM%, CEC, drainage, elevation, slope
-
-### 6. Farm Management
-- **Summary Cards** — Total fields, acres, crop types, avg field size
-- **Field Inventory Cards** — Per-field cards with crop, soil, NDVI, stress, View/Edit/Report actions
-
-### 7. Reports
-- **Crop Distribution** — Donut pie chart
-- **Stress Risk Distribution** — Bar chart (Low/Medium/High)
-- **Annual Weather Summary Table** — 2021–2025 rainfall, temp, stress days
-- **Batch Export** — CSV and Excel download buttons
-
-### 8. Settings
-- **Appearance** — Theme toggle, reduced motion switch
-- **Notifications** — Email alerts, weekly summary, weather warnings
-- **Data Preferences** — Default year selector, measurement units
-- **About** — Version, data sources, author info
-
----
-
-## 🎨 UX Features
-
-- **Command Palette** — `Ctrl+K` opens overlay, real-time filtering, navigates to any page, launches demo, exports data
-- **Dashboard-First** — No onboarding modal; dashboard loads immediately with empty-state banner
-- **Three Primary Actions** — Open Existing Farm, Add Farm, Launch Demo Mode (prominent in toolbar)
-- **Demo Mode** — Auto-loads Maryland farm data, badge in header, exit button
-- **Theme Toggle** — Light/dark mode with CSS custom properties, persisted in localStorage
-- **Global Search** — Search fields by name, crop, or soil type; dropdown results
-- **Responsive** — Collapsible navigation rail (240px → 72px), stacked layout below 768px
-- **Keyboard Shortcuts** — `Ctrl+K` command palette, `Ctrl+Shift+L` theme, `Ctrl+Shift+D` demo, `Esc` close overlays
-
----
-
-## 📊 Data Sources & Runtime Dataset
-
-All data is **embedded inline in `data.py`** — no external file reads required. The data was extracted from the My Farm Advisor runtime pipeline.
-
-### Farm
-- **Name**: Maryland Final Project Farm
-- **Grower**: md-grower
-- **Location**: Caroline County, MD (FIPS 24011)
-
-### Fields (10)
-Field boundaries from **OpenStreetMap / Overpass API**.
-Geometries, acreage, centroids, elevation (min/max), slope, soil type, drainage, pH, organic matter, CEC, 2025 crop, full-year NDVI timeseries, and stress index.
-
-### Weather (2021–2025)
-Monthly aggregates from **NASA POWER S3 Zarr**:
-- Average, max, min temperature (°C)
-- Rainfall (mm)
-- Solar radiation (W/m²)
-- Humidity (%)
-- Heat stress days (count)
-
-### Additional Sources
-- **DEM**: USGS 3DEP 1-meter (TNM)
-- **Soils**: NRCS SSURGO (Ingleside, Hambrook, Fallsington series)
-- **CDL**: USDA NASS Cropland Data Layer (Soybeans, Corn, Winter Wheat, Grass/Pasture)
-
-### Where to Find Data in Code
-- `data.py:FIELDS` — List of 10 field dictionaries
-- `data.py:WEATHER_MONTHLY` — List of 60 monthly records
-- `data.py:get_field_by_id()` — Field lookup helper
-- `data.py:get_weather_by_year()` — Year filter helper
-- `data.py:get_total_acres()` / `get_avg_stress()` / `get_high_risk_count()` / `get_well_drained_count()` / `get_avg_ndvi()` — Aggregate helpers
-
-### Report Serving
-Farm reports are served from the runtime directory via `/reports/<filename>`:
-```
-/reports/md_caroline_farm_report.html
-```
-Configure `MY_FARM_ADVISOR_RUNTIME` to point to your data-pipeline root.
-
----
-
-## 👤 Author
-
-**Stephon Green** 
-
----
-
-## 📜 License
-
-Apache-2.0
-
----
-
-## 🔗 Links
-
-- **GitHub Repository**: https://github.com/S-G1/green-ag-intelligence
-- **Dashboard Info**: See `DASHBOARD.md` for supplementary documentation
-- **Supplementary Documentation**: See `DASHBOARD.md` for project overview, dataset description, dashboard explanation, analytical interpretation, and AI usage documentation.
-- **Pull Request**: https://github.com/S-G1/green-ag-intelligence/pulls
-  (Latest: `release/v2.2-dashboard-first` → `main`)
-- **Hosted Dashboard**: Deploy via Render blueprint (`render.yaml`) — see Quick Start above
-- **Live Demo URL**: https://green-ag-intelligence-1.onrender.com (after deployment)
