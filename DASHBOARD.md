@@ -1,11 +1,13 @@
-# Supplementary Dashboard Information — Green Ag Intelligence Platform
+# Green Ag Intelligence Platform technical case study
+
+**Validation update November 13 2026:** This is a portfolio application with unresolved data and hosted-UI checks. [DATA_VALIDATION.md](DATA_VALIDATION.md) records the current evidence and repair sequence. The original design and provenance narrative below is retained as project documentation; it is not proof that the upstream dataset or all listed features have passed independent validation.
 
 ---
 
 ## 1. Project Overview
 
 ### Purpose
-The **Green Ag Intelligence Platform** is an enterprise-grade agricultural dashboard that transforms raw environmental and operational farm data into actionable intelligence. It was built as a portfolio-grade, production-ready Dash application for the **My Farm Advisor** project, replacing an earlier branch-based dashboard with a standalone, multi-file, deployable web application.
+The **Green Ag Intelligence Platform** is a precision-agriculture portfolio dashboard that transforms raw environmental and operational farm data into actionable intelligence. It was built as a portfolio-grade Dash application for the **My Farm Advisor** project, replacing an earlier branch-based dashboard with a standalone, multi-file, deployable web application.
 
 ### Target Users
 - Farm managers and agronomists monitoring field health
@@ -36,7 +38,7 @@ The **Green Ag Intelligence Platform** is an enterprise-grade agricultural dashb
 | County | Caroline County, Maryland |
 | FIPS Code | 24011 |
 | Total Fields | 10 |
-| Total Acres | 579.6 |
+| Total Acres | Unverified; embedded area labels sum to 599.6 |
 | Year Range | 2021–2025 |
 | Crops | Soybeans, Corn, Winter Wheat, Grass/Pasture |
 
@@ -50,7 +52,7 @@ Each of the 10 fields contains:
 - **Soil Series**: Ingleside, Hambrook, or Fallsington
 - **Drainage**: Well drained or Poorly drained
 - **Soil Chemistry**: pH (5.54–6.23), Organic Matter % (0.60–10.56), CEC (7.8–12.5)
-- **Crop (2025)**: Soybeans (5 fields), Corn (3), Grass/Pasture (1), Winter Wheat (0)
+- **Embedded crop labels (2025)**: Soybeans (6 records), Corn (3), Grass/Pasture (1), Winter Wheat (0); reconcile with source data.
 - **NDVI Timeseries**: 12 monthly values per field for 2025 (Jan–Dec)
 - **Stress Index**: 0–100 scale calculated from environmental stressors
 
@@ -180,6 +182,8 @@ User preferences and platform info.
 
 ## 4. Analytical Interpretation
 
+**Provisional interpretation:** The original claims in this section conflict with the embedded dataset in places, including the maximum-stress field, acreage, counts, geometry, and weather units. They must not be reused as validated findings. Use the specific code checks in DATA_VALIDATION.md and regenerate this section after source reconciliation.
+
 ### 4.1 How to Read NDVI
 **NDVI (Normalized Difference Vegetation Index)** ranges from 0 to 1:
 - **0.0–0.3**: Bare soil, dormant, or stressed vegetation
@@ -262,7 +266,7 @@ This dashboard was developed with assistance from **AI coding agents** (OpenCode
 - **NDVI interpolation**: Monthly NDVI values were derived from Sentinel-2/Landsat time series using linear interpolation (AI-assisted temporal processing)
 
 ### 5.3 Transparency Statement
-- All data values are **real** — sourced from public domain datasets, not AI-generated
+- The project narrative attributes data to public datasets. The upstream source extracts and processing pipeline are not included here; those claims require reconciliation before being described as independently validated.
 - All code is **human-reviewed** — AI-generated components were compiled, tested, and corrected before commit
 - The dashboard **does not use AI inference at runtime** — no LLM calls, no generative AI in the browser
 - AI was used as a **development accelerator**, not a replacement for domain expertise
@@ -271,7 +275,7 @@ This dashboard was developed with assistance from **AI coding agents** (OpenCode
 - **Domain expertise**: Agricultural data interpretation, stress index formula design, recommendation logic
 - **Quality assurance**: Manual testing of all 8 pages, cross-browser validation, responsive layout verification
 - **Deployment configuration**: Render blueprint (`render.yaml`), Heroku `Procfile`, dependency pinning
-- **Data provenance**: Verified all 10 field geometries against OpenStreetMap source; confirmed weather station metadata
+- **Data provenance account**: The original development notes report geometry and weather-metadata checks. The current embedded polygon rings have zero area; recover and validate the original source geometry and weather metadata before reusing that claim.
 
 ---
 
@@ -295,7 +299,6 @@ This dashboard was developed with assistance from **AI coding agents** (OpenCode
 | Dataset Description | Section 2 above | ✅ Complete |
 | Dashboard Explanation | Section 3 above | ✅ Complete |
 | Analytical Interpretation | Section 4 above | ✅ Complete |
-| Pull Request / Release | `https://github.com/S-G1/green-ag-intelligence/pull/new/release/v2.2-documentation` | ✅ Complete |
 
 ---
 

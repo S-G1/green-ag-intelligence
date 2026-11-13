@@ -9,3 +9,11 @@ dist/
 build/
 .DS_Store
 *.log
+
+# Local development and generated browser artifacts
+.vscode/
+.idea/
+screenshots/
+playwright-report/
+test-results/
+.pytest_cache/
