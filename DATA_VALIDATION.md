@@ -2,6 +2,10 @@
 
 Checked November 13, 2026 against main commit `2a0b6f0553ca72c638cab562ba314971039d37c9`. The findings below come from static inspection of `data.py`, the documentation, and a limited desktop check of the hosted app. They do not establish the cause of any upstream error.
 
+## Dependency compatibility
+
+The first November 13, 2026 pull-request run failed in Start Dash app after installing Plotly 7.1.0: `plotly.graph_objects` no longer had `Scattermapbox`. Browser tests were skipped in that run. This branch adds `plotly>=5.24.0,<7` to retain the existing map API while a migration is planned. Verify the replacement CI run; the constraint alone does not validate maps or data. Other dependencies still use lower bounds, so a tested lock or compatibility policy remains a follow-up.
+
 ## Findings requiring repair
 
 | Finding | Current evidence | Acceptance check |
@@ -46,3 +50,4 @@ Do not move test files or reorganize imports while resolving the primary data an
 - Keep source and documentation links prominent.
 - The pull-request creation link in the old case study was not an existing completed pull request.
 - License choice remains with the repository owner. Add a LICENSE file only after that choice is established.
+

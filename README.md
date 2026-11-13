@@ -57,6 +57,8 @@ python smoke_test.py
 python test_app.py
 ```
 
+A fresh installation on November 13, 2026 selected Plotly 7.1.0 and failed at startup because the app uses the removed `Scattermapbox` API. `requirements.txt` now caps Plotly below 7 pending a tested map migration. Consult the pull request checks for the current result.
+
 The main-branch push workflow for commit `2a0b6f0` completed successfully on August 1, 2026. That result is evidence of that run, not a check of current hosted deployment health or data accuracy. The smoke script logs errors without failing on all of them, and the comprehensive script fails for its collected functional failures but permits console/page errors. Extend meaningful assertions when repairing the application.
 
 ## Quick Start
@@ -130,3 +132,4 @@ Stephon Green
 ## License
 
 A license has not yet been established by a LICENSE file in this repository. The previous Apache-2.0 label was removed pending the owner's explicit license choice. Do not assume a reuse grant from the former label.
+
